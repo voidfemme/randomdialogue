@@ -133,9 +133,7 @@ public class PlayerFilterManager {
     }
     
     public void setPlayerFilter(UUID playerId, FilterDefinition filter) {
-        if (currentMode == FilterMode.MANUAL) {
-            playerFilters.put(playerId, filter);
-        }
+        playerFilters.put(playerId, filter);
     }
     
     public void setPlayerFilter(UUID playerId, String filterName) {
