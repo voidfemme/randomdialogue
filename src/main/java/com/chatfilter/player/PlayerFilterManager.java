@@ -128,7 +128,7 @@ public class PlayerFilterManager {
         if (currentMode == FilterMode.CHAOS_MODE) {
             // Only randomize if player doesn't have a manually set filter
             if (manuallySetPlayers.contains(playerId)) {
-                return playerFilters.get(playerId)
+                return playerFilters.get(playerId);
             }
             return getRandomFilter();
         }
