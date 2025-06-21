@@ -1,0 +1,34 @@
+{
+    "schemaVersion": 1,
+    "id": "chat-filter",
+    "version": "${version}",
+    "name": "Chat Filter",
+    "description": "Transform chat messages using AI personalities and filters",
+    "authors": [
+        "YourName"
+    ],
+    "contact": {
+        "homepage": "https://github.com/yourusername/chat-filter",
+        "sources": "https://github.com/yourusername/chat-filter"
+    },
+    "license": "MIT",
+    "icon": "assets/chat-filter/icon.png",
+    "environment": "server",
+    "entrypoints": {
+        "main": [
+            "com.chatfilter.ChatFilterMod"
+        ]
+    },
+    "mixins": [
+        "chat-filter.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=${loader_version}",
+        "minecraft": "~${minecraft_version}",
+        "java": ">=21",
+        "fabric-api": "*"
+    },
+    "suggests": {
+        "cloth-config": "*"
+    }
+}

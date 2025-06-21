@@ -1,0 +1,125 @@
+# Build outputs
+build/
+out/
+bin/
+target/
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+.buildpath
+
+# Eclipse
+.metadata/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# IntelliJ IDEA
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Mac
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Java
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# Minecraft
+run/
+logs/
+crash-reports/
+*.dmp
+
+# Configuration files with sensitive data
+config/
+*.properties
+!gradle.properties
+!gradle/wrapper/gradle-wrapper.properties
+
+# Test files
+test.txt
+*.test
+debug/
+
+# API keys and secrets
+.env
+*.key
+secrets.json
+api-keys.txt
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Fabric/Forge development
+.fabric/
+.mixin.out/
+remappedSrc/
+
+# Mod development
+mods/
+libs/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Runtime directories
+minecraft/
+.minecraft/
+server/
+
+# JVM crash logs
+hs_err_pid*
+
+# Generated sources
+generated/
