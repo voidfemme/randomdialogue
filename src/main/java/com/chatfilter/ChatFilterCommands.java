@@ -131,6 +131,13 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             FilterMode newMode = FilterMode.valueOf(args[1].toUpperCase());
             FilterMode oldMode = playerManager.getCurrentMode();
             playerManager.setCurrentMode(newMode);
+
+            // Clear manual overrides to reset manually set players list
+            if (newMode == FilterMode.CHAOS_MODE ||
+                newMode == FilterMode.DAILY_RANDOM ||
+                newMode == FilterMode.SESSION_RANDOM) {
+                playerManager.clearAllManualOverrides();
+            }
             
             String message = switch (newMode) {
                 case DISABLED -> ChatColor.RED + "Chat filters have been DISABLED!";

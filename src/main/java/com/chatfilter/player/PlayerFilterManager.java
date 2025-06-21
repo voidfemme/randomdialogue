@@ -25,6 +25,7 @@ public class PlayerFilterManager {
     private final Map<UUID, FilterDefinition> dailyAssignedFilters = new ConcurrentHashMap<>();
     private final Map<UUID, String> lastAssignedDate = new ConcurrentHashMap<>();
     private final Map<UUID, FilterDefinition> sessionFilters = new ConcurrentHashMap<>();
+    private final Set<UUID> manuallySetPlayers = new HashSet<>();
     
     public PlayerFilterManager() {
         ChatFilterConfig config = ChatFilterConfig.getInstance();
@@ -118,9 +119,17 @@ public class PlayerFilterManager {
         
         // Silent mode - no messages to players
     }
+
+    public void clearAllManualOverrides() {
+        manuallySetPlayers.clear();
+    }
     
     public FilterDefinition getPlayerFilter(UUID playerId) {
         if (currentMode == FilterMode.CHAOS_MODE) {
+            // Only randomize if player doesn't have a manually set filter
+            if (manuallySetPlayers.contains(playerId)) {
+                return playerFilters.get(playerId)
+            }
             return getRandomFilter();
         }
         
@@ -134,6 +143,7 @@ public class PlayerFilterManager {
     
     public void setPlayerFilter(UUID playerId, FilterDefinition filter) {
         playerFilters.put(playerId, filter);
+        manuallySetPlayers.add(playerId);
     }
     
     public void setPlayerFilter(UUID playerId, String filterName) {

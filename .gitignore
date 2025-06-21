@@ -81,7 +81,10 @@ crash-reports/
 *.dmp
 
 # Configuration files with sensitive data
-config/
+/config/
+plugins/*/config
+server/config
+*.config
 *.properties
 !gradle.properties
 !gradle/wrapper/gradle-wrapper.properties
