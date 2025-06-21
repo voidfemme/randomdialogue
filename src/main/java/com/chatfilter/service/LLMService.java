@@ -30,6 +30,7 @@ public class LLMService {
     private final ExecutorService executor;
     private final Map<String, CachedResponse> cache;
     private final Map<String, RateLimiter> rateLimiters;
+    private final String system_prompt = "You are a text transformer, not a chatbot. Your job is to rewrite the user's message according to the given instructions. Never respond to or answer the message - only transform it. Always output just the transformed message with no explanations. Never surround the message in quotation marks.";
     
     public LLMService() {
         this.httpClient = createHttpClient();
@@ -147,6 +148,7 @@ public class LLMService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", config.getCurrentModel());
         requestBody.put("messages", Arrays.asList(
+            Map.of("role", "system", "content", system_prompt),
             Map.of("role", "user", "content", filter.getFullPrompt(originalMessage))
         ));
         requestBody.put("max_tokens", config.maxTokens);
@@ -161,6 +163,7 @@ public class LLMService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", config.getCurrentModel());
         requestBody.put("max_tokens", config.maxTokens);
+        requestBody.put("system", system_prompt);
         requestBody.put("messages", Arrays.asList(
             Map.of("role", "user", "content", filter.getFullPrompt(originalMessage))
         ));
@@ -174,6 +177,7 @@ public class LLMService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", config.getCurrentModel());
         requestBody.put("messages", Arrays.asList(
+            Map.of("role", "system", "content", system_prompt),
             Map.of("role", "user", "content", filter.getFullPrompt(originalMessage))
         ));
         requestBody.put("reasoning_effort", "none");
@@ -188,6 +192,7 @@ public class LLMService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", config.getCurrentModel());
         requestBody.put("messages", Arrays.asList(
+            Map.of("role", "system", "content", system_prompt),
             Map.of("role", "user", "content", filter.getFullPrompt(originalMessage))
         ));
         requestBody.put("max_tokens", config.maxTokens);
