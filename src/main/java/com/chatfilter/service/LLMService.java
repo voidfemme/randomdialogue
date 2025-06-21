@@ -239,7 +239,7 @@ public class LLMService {
             char last = trimmed.charAt(trimmed.length() - 1);
 
             // Remove if surroun ded by any type of quotes
-            if ((first == '"' || first == '\'' || first == '"' || first == '"') && 
+            if ((first == '"' || first == '\'' || first == '"' || first == '"' || first == "\"") && 
                 (last == '"' || last == '\'' || last == '"' || last == '"')) {
                 return trimmed.substring(1, trimmed.length() - 1);
             }
