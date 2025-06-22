@@ -51,11 +51,31 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             case "mode":
                 return handleModeCommand(sender, args);
             case "enable":
+                if (args.length == 1) {
+                    // Player enabling for themselves
+                    return enablePlayerFilterSelf(sender);
+                } else {
+                    // Admin enabling for another player
+                    if (!sender.hasPermission("randomdialogue.admin")) {
+                        sender.sendMessage(Component.text("You can only enable filters for yourself.", NamedTextColor.RED));
+                        return true;
+                    }
                 return enablePlayerFilter(sender, args);
+                }
             case "disable":
                 return disablePlayerFilter(sender, args);
             case "set":
+                if (args.length == 2) {
+                    // Player setting their own filter: /chatfilter set <filter>
+                    return setPlayerOwnFilter(sender, args[1]);
+                } else if (args.length == 3) {
+                    // Admin setting for another: /chatfilter set <player> <filter>
+                    if (!sender.hasPermission("randomdialogue.admin")) {
+                        sender.sendMessage(Component.text("You can only set filters for yourself.", NamedTextColor.RED));
+                        return true;
+                    }
                 return handleSetCommand(sender, args);
+                }
             case "reroll":
                 return rerollFilter(sender, args);
             case "status":
@@ -101,10 +121,19 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                     }
                 }
             } else if (args[0].equalsIgnoreCase("set")) {
-                // Player names for set command
-                for (Player player : sender.getServer().getOnlinePlayers()) {
-                    if (player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
-                        completions.add(player.getName());
+                if (args.length == 2) {
+                    // Player setting their own filter - show filter names
+                    for (String filterName : FilterManager.getInstance().getEnabledFilterNames()) {
+                        if (filterName.toLowerCase().startsWith(args[1].toLowerCase())) {
+                            completions.add(filterName.toLowerCase());
+                        }
+                    }
+                } else if (args.length == 3) {
+                    // Admin setting for another player - show filter names
+                    for (String filterName : FilterManager.getInstance().getEnabledFilterNames()) {
+                        if (filterName.toLowerCase().startsWith(args[2].toLowerCase())) {
+                            completions.add(filterName.toLowerCase());
+                        }
                     }
                 }
             }
@@ -188,6 +217,22 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         sender.sendMessage(Component.text("Chat filters enabled for ", NamedTextColor.GREEN) + targetPlayer.getName());
         return true;
     }
+
+    private boolean enablePlayerFilterSelf(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can enable filters for themselves.", NamedTextColor.RED));
+            return true;
+        }
+
+        if (playerManager.getCurrentMode() == FilterMode.DISABLED) {
+            sender.sendMessage(Component.text("Chat filters are currently disabled on the server.", NamedTextColor.RED));
+            return true;
+        }
+
+        playerManager.setPlayerEnabled(player.getUniqueId(), true);
+        sender.sendMessage(Component.text("Chat filters enabled for you!", NamedTextColor.GREEN));
+        return true;
+    }
     
     private boolean disablePlayerFilter(CommandSender sender, String[] args) {
         if (args.length < 2) {
@@ -206,6 +251,48 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         return true;
     }
     
+    private boolean setPlayerOwnFilter(CommandSender sender, String filterName) {
+        // Only players can use this command
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can set their own filter.", NamedTextColor.RED));
+            return true;
+        }
+
+        // Check if filters are disabled server-wide
+        if (playerManager.getCurrentMode() == FilterMode.DISABLED) {
+            sender.sendMessage(Component.text("Chat filters are currently disabled on the server.", NamedTextColor.RED));
+            return true;
+        }
+
+        // Check if player can manually set filters in current mode
+        FilterMode currentMode = playerManager.getCurrentMode();
+        if (currentMode != FilterMode.MANUAL) {
+            sender.sendMessage(Component.text("Filter selection is not available in ", NamedTextColor.YELLOW)
+                .append(Component.text(currentMode.name().toLowerCase(), NamedTextColor.RED))
+                .append(Component.text(" mode.", NamedTextColor.YELLOW)));
+            return true;
+        }
+
+        // Find the filter
+        FilterDefinition filter = FilterManager.getInstance().getFilter(filterName.toUpperCase());
+        if (filter == null || !filter.enabled) {
+            sender.sendMessage(Component.text("Invalid filter. Use ", NamedTextColor.RED)
+                .append(Component.text("/chatfilter list", NamedTextColor.AQUA))
+                .append(Component.text(" to see available filters.", NamedTextColor.RED)));
+            return true;
+        }
+
+        // Set the filter for the player
+        playerManager.setPlayerFilter(player.getUniqueId(), filter);
+        playerManager.setPlayerEnabled(player.getUniqueId(), true);
+
+        sender.sendMessage(Component.text("Your filter has been set to: ", NamedTextColor.GREEN)
+            .append(Component.text(filter.getDisplayName(), filter.getChatColor()))
+            .append(Component.text(" " + filter.emoji, NamedTextColor.GREEN)));
+
+        return true;
+    }
+
     private boolean handleSetCommand(CommandSender sender, String[] args) {
         if (args.length < 3) {
             sender.sendMessage(Component.text("Usage: /chatfilter set <player> <filter>", NamedTextColor.RED));

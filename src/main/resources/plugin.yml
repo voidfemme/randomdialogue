@@ -3,15 +3,17 @@ version: ${version}
 description: A plugin that generates random dialogue responses using LLM
 main: com.chatfilter.ChatFilterMod
 api-version: 1.21
-authors: voidfemme
+authors: [voidfemme]
 
 commands:
   chatfilter:
     description: Admin command for Random Dialogue plugin
     usage: /chatfilter <subcommand>
-    permission: randomdialogue.admin
 
 permissions:
   randomdialogue.admin:
     description: Allows full access to Random Dialogue admin commands
     default: op
+  randomdialogue.use:
+    description: Allows basic use of RandomDialogue features
+    default: true
