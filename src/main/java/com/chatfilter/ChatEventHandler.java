@@ -14,6 +14,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.logging.Logger;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 
 import java.util.UUID;
@@ -44,7 +45,12 @@ public class ChatEventHandler implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         String playerName = player.getName();
-        String originalMessage = event.message().toString();
+        String originalMessage = PlainTextComponentSerializer.plainText().serialize(event.message());
+
+        // Skip processing if this is a command
+        if (originalMessage.startsWith("/")) {
+            return;
+        }
         
         // Check if player has filtering enabled
         if (!playerManager.isPlayerEnabled(playerId)) {

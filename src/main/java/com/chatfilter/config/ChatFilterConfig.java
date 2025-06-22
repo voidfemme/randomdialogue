@@ -209,7 +209,6 @@ public class ChatFilterConfig {
             case "local" -> ""; // Local doesn't need API key
             default -> "";
         };
-        System.out.println("DEBUG: Provider=" + llmProvider + ", API Key=" + (apiKey.isEmpty() ? "EMPTY" : "***" + apiKey.substring(Math.max(0, apiKey.length()-4))));
         return apiKey;
     }
     

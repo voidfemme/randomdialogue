@@ -346,16 +346,12 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         if (sender instanceof Player player) {
             FilterDefinition currentFilter = playerManager.getPlayerFilter(player.getUniqueId());
             sender.sendMessage(Component.text("Your Current Filter: ", NamedTextColor.AQUA)
-                .append(Component.text(currentFilter.getDisplayName()).color(currentFilter.getChatColor())));
-            sender.sendMessage(Component.text("Your Current Filter: ", NamedTextColor.AQUA)
                 .append(Component.text(currentFilter.getDisplayName(), currentFilter.getChatColor()))
                 .append(Component.text(" " + currentFilter.emoji)));
         }
         
         sender.sendMessage(Component.text("Your messages are transformed using AI to add personality.", NamedTextColor.GRAY));
         sender.sendMessage(Component.text("Original messages are not stored permanently.", NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("Use ", NamedTextColor.GREEN)
-            .append(Component.text("/chatfilter help", NamedTextColor.AQUA)));
         sender.sendMessage(Component.text("Use ", NamedTextColor.GREEN)
             .append(Component.text("/chatfilter help", NamedTextColor.AQUA))
             .append(Component.text(" for more commands.", NamedTextColor.GREEN)));
