@@ -173,15 +173,20 @@ public class LLMService {
 
     private String callGroq(String originalMessage, FilterDefinition filter) throws LLMException {
         ChatFilterConfig config = ChatFilterConfig.getInstance();
+        String currentModel = config.getCurrentModel();
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", config.getCurrentModel());
+        requestBody.put("model", currentModel);
         requestBody.put("messages", Arrays.asList(
             Map.of("role", "system", "content", system_prompt),
             Map.of("role", "user", "content", filter.getFullPrompt(originalMessage))
         ));
-        requestBody.put("reasoning_effort", "none");
 
+        switch (currentModel) {
+            case "qwen/qwen3-32b":
+                requestBody.put("reasoning_effort", "none");
+                break;
+        }
 
         return executeRequest(config.getCurrentEndpoint(), requestBody, config.getCurrentApiKey(), "Bearer ");
     }

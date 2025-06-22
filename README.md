@@ -110,6 +110,22 @@ The mod creates a configuration file at `config/chat-filter.json`. Key settings:
 - 🦴 **caveman** - Simple words and concepts
 - Open the filters.json file to define your very own!
 
+## Discord Integration
+
+This plugin automatically integrates with EssentialsDiscord when available.
+Transformed messages will be sent to both Minecraft chat and your configured
+Discord channels.
+
+### Setup
+1. Install and configure [EssentialsDiscord](https://github.com/EssentialsX/Essentials)
+2. Ensure your Discord bot has proper permissions
+3. Random Dialogue will automatically detect and use the Discord integration
+
+### Requirements
+- EssentialsDiscord plugin installed and configured
+- No additional configuration needed - uses your existing EssentialsDiscord settings
+- (Note: EssentialsDiscord is not a dependency, servers without EssentialsDiscord can still install RandomDialogue with no issues)
+
 ## Development
 
 ### Building

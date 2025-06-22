@@ -24,17 +24,18 @@ public class ChatEventHandler implements Listener {
     
     private final PlayerFilterManager playerManager;
     private final LLMService llmService;
+    private final ChatFilterMod plugin;
     
-    private ChatEventHandler(PlayerFilterManager playerManager, LLMService llmService) {
+    private ChatEventHandler(PlayerFilterManager playerManager, LLMService llmService, ChatFilterMod plugin) {
         this.playerManager = playerManager;
         this.llmService = llmService;
+        this.plugin = plugin;
     }
     
-    public static void register(PlayerFilterManager playerManager, LLMService llmService) {
-        ChatEventHandler handler = new ChatEventHandler(playerManager, llmService);
+    public static void register(PlayerFilterManager playerManager, LLMService llmService, ChatFilterMod plugin) {
+        ChatEventHandler handler = new ChatEventHandler(playerManager, llmService, plugin);
         
         // Register with Bukkit
-        Plugin plugin = ChatFilterMod.getInstance();
         Bukkit.getPluginManager().registerEvents(handler, plugin);
         
         LOGGER.info("Chat event handler registered");
@@ -106,6 +107,7 @@ public class ChatEventHandler implements Listener {
     private void sendTransformedMessage(Player player, String transformedMessage, String originalMessage) {
         ChatFilterConfig config = ChatFilterConfig.getInstance();
         String playerName = player.getName();
+        ChatFilterMod plugin = ChatFilterMod.getInstance();
         
         // Send the message as if it came from the player normally (no special formatting)
         String finalMessage = "<" + playerName + "> " + transformedMessage;
@@ -115,6 +117,10 @@ public class ChatEventHandler implements Listener {
         
         if (config.enableDebugLogging) {
             LOGGER.info("Transformed message from " + playerName + ": '" + originalMessage + "' -> '" + transformedMessage + "'");
+        }
+
+        if (plugin.isDiscordIntegrationEnabled()) {
+            plugin.sendToDiscord(player, transformedMessage);
         }
     }
     
