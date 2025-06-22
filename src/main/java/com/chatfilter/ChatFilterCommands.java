@@ -340,8 +340,6 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         sender.sendMessage(Component.text("Model: ", NamedTextColor.AQUA).append(Component.text(config.getCurrentModel(), NamedTextColor.WHITE)));
         sender.sendMessage(Component.text("Endpoint: ", NamedTextColor.AQUA).append(Component.text(config.getCurrentEndpoint(), NamedTextColor.WHITE)));
         sender.sendMessage(Component.text("Current Mode: ", NamedTextColor.AQUA).append(Component.text(playerManager.getCurrentMode().name().toLowerCase(), NamedTextColor.YELLOW)));
-        sender.sendMessage(Component.text("Current Mode: ", NamedTextColor.AQUA)
-            .append(Component.text(playerManager.getCurrentMode().name().toLowerCase(), NamedTextColor.YELLOW)));
         
         if (sender instanceof Player player) {
             FilterDefinition currentFilter = playerManager.getPlayerFilter(player.getUniqueId());
