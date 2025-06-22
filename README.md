@@ -148,6 +148,10 @@ The mod includes several features to help manage API costs:
 2. **"Rate limit exceeded"** - Adjust `rate_limit_per_minute` in config
 3. **Messages not transforming** - Check server logs for errors, ensure API provider is accessible
 
+### Known Bugs
+groq llm settings aren't quite what they should be, which causes a 400 error
+because of the thinking field in the api call
+
 ### Logs
 
 The mod logs extensively to help diagnose issues:
