@@ -126,3 +126,7 @@ hs_err_pid*
 
 # Generated sources
 generated/
+final_fixes.sh
+fix_color_deprecation.sh
+fix_color_deprecation_phase2.sh
+fix_component_concat.sh

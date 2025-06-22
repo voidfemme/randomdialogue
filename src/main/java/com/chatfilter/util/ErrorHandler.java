@@ -44,11 +44,11 @@ public class ErrorHandler {
     }
     
     public static void notifyPlayerError(Player player, String error, boolean showToOthers) {
-        String errorMessage = NamedTextColor.RED + "❌ " + error;
+        String errorMessage = Component.text("❌ ", NamedTextColor.RED) + error;
         player.sendMessage(errorMessage);
         
         if (showToOthers) {
-            String publicMessage = NamedTextColor.YELLOW + "⚠ " + player.getName() + "'s message could not be processed";
+            String publicMessage = Component.text("⚠ ", NamedTextColor.YELLOW) + player.getName() + "'s message could not be processed";
             Bukkit.broadcast(Component.text(publicMessage));
         }
     }
