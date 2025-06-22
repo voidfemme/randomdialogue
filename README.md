@@ -70,6 +70,8 @@ The mod creates a configuration file at `config/chat-filter.json`. Key settings:
 - `/chatfilter reroll` - Reroll your filter (random modes only)
 - `/chatfilter status` - Show your current filter status
 - `/chatfilter test <message>` - Test your filter without sending to chat
+- `/chatfilter who`/`/chatfilter players` - See who has what filters!
+- `/chatfilter llm_info` - Display info about the LLM and provider being used.
 
 ### Admin Commands
 
@@ -106,6 +108,7 @@ The mod creates a configuration file at `config/chat-filter.json`. Key settings:
 - 👴 **boomer complaints** - Kids these days and technology
 - 📱 **influencer** - Social media marketing speak
 - 🦴 **caveman** - Simple words and concepts
+- Open the filters.json file to define your very own!
 
 ## Development
 
