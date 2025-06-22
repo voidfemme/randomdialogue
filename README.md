@@ -62,21 +62,31 @@ The mod creates a configuration file at `config/chat-filter.json`. Key settings:
 ## Usage
 
 ### Player Commands
+**Self-Management:**
+- `/chatfilter enable` - Enable chat filtering for yourself
+- `/chatfilter disable` - Disable chat filtering for yourself  
+- `/chatfilter set <filter>` - Choose your personality filter (manual mode only)
+- `/chatfilter reroll` - Get a new random filter (available in random modes)
 
-- `/chatfilter enable` - Enable chat filtering (manual mode)
-- `/chatfilter disable` - Disable chat filtering (manual mode)
-- `/chatfilter set <filter>` - Set your personality filter
-- `/chatfilter list` - List all available filters
-- `/chatfilter reroll` - Reroll your filter (random modes only)
-- `/chatfilter status` - Show your current filter status
-- `/chatfilter test <message>` - Test your filter without sending to chat
-- `/chatfilter who`/`/chatfilter players` - See who has what filters!
-- `/chatfilter llm_info` - Display info about the LLM and provider being used.
+**Information:**
+- `/chatfilter status` - Check your current filter status
+- `/chatfilter list` - Browse all available personality filters
+- `/chatfilter llm_info` - View LLM provider and model information
+- `/chatfilter who` - See everyone's current filter assignments
 
 ### Admin Commands
+**Player Management:**
+- `/chatfilter enable <player>` - Enable filtering for a specific player
+- `/chatfilter disable <player>` - Disable filtering for a specific player
+- `/chatfilter set <player> <filter>` - Assign a filter to a specific player
+- `/chatfilter reroll <player>` - Reroll a player's filter
 
-- `/chatfilter mode <mode>` - Set server filter mode
-- `/chatfilter reload` - Reload configuration
+**Server Management:**
+- `/chatfilter mode <mode>` - Change the server-wide filter mode
+- `/chatfilter status [player]` - View server status or specific player details
+- `/chatfilter reload` - Reload filters and configuration
+
+**Note:** Players have full control over their own chat experience, while admins can manage server-wide settings and assist individual players.
 
 ### Filter Modes
 
