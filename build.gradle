@@ -99,3 +99,7 @@ publishing {
     repositories {
     }
 }
+
+compileJava {
+    options.compilerArgs += ['-Xlint:deprecation']
+}

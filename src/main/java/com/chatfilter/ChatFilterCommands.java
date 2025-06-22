@@ -2,6 +2,7 @@ package com.chatfilter;
 
 import com.chatfilter.config.FilterMode;
 import com.chatfilter.filter.ChatFilter;
+import com.chatfilter.config.ChatFilterConfig;
 import com.chatfilter.filter.FilterDefinition;
 import com.chatfilter.filter.FilterManager;
 import com.chatfilter.player.PlayerFilterManager;
@@ -64,6 +65,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 return showPlayerFilters(sender);
             case "reload":
                 return reloadFilters(sender);
+            case "llm_info":
+                return handleInfoCommand(sender, args);
             default:
                 return showHelp(sender);
         }
@@ -74,7 +77,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
         
         if (args.length == 1) {
-            String[] subcommands = {"mode", "enable", "disable", "set", "reroll", "status", "list", "reload"};
+            String[] subcommands = {"mode", "enable", "disable", "set", "reroll", "status", "list", "who", "players", "reload", "llm_info"};
             for (String sub : subcommands) {
                 if (sub.startsWith(args[0].toLowerCase())) {
                     completions.add(sub);
@@ -321,6 +324,29 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.GREEN + "Filters reloaded from JSON configuration.");
         return true;
     }
+
+    private boolean handleInfoCommand(CommandSender sender, String[] args) {
+        ChatFilterConfig config = ChatFilterConfig.getInstance();
+
+        sender.sendMessage(ChatColor.GOLD + "=== Chat Filter Information ===");
+        sender.sendMessage(ChatColor.AQUA + "Provider: " + ChatColor.WHITE + config.llmProvider);
+        sender.sendMessage(ChatColor.AQUA + "Model: " + ChatColor.WHITE + config.getCurrentModel());
+        sender.sendMessage(ChatColor.AQUA + "Endpoint: " + ChatColor.WHITE + config.getCurrentEndpoint());
+        sender.sendMessage(ChatColor.AQUA + "Current Mode: " + ChatColor.YELLOW + playerManager.getCurrentMode().name().toLowerCase());
+        
+        if (sender instanceof Player player) {
+            FilterDefinition currentFilter = playerManager.getPlayerFilter(player.getUniqueId());
+            sender.sendMessage(ChatColor.AQUA + "Your Current Filter: " + currentFilter.getChatColor() + 
+                             currentFilter.getDisplayName() + " " + currentFilter.emoji);
+        }
+        
+        sender.sendMessage(ChatColor.GRAY + "Your messages are transformed using AI to add personality.");
+        sender.sendMessage(ChatColor.GRAY + "Original messages are not stored permanently.");
+        sender.sendMessage(ChatColor.GREEN + "Use " + ChatColor.AQUA + "/chatfilter help" + 
+                         ChatColor.GREEN + " for more commands.");
+        
+        return true;
+    }
     
     private boolean showHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.AQUA + "=== Random Dialogue Admin Commands ===");
@@ -331,6 +357,9 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.YELLOW + "/chatfilter disable <player>" + ChatColor.WHITE + " - Disable filters for player");
         sender.sendMessage(ChatColor.YELLOW + "/chatfilter set <player> <filter>" + ChatColor.WHITE + " - Set filter for player");
         sender.sendMessage(ChatColor.YELLOW + "/chatfilter reroll <player>" + ChatColor.WHITE + " - Reroll filter for player");
+        sender.sendMessage(ChatColor.YELLOW + "/chatfilter who" + ChatColor.WHITE + " - Show every player's current filter status");
+        sender.sendMessage(ChatColor.YELLOW + "/chatfilter players" + ChatColor.WHITE + " - Show every player's current filter status");
+        sender.sendMessage(ChatColor.YELLOW + "/chatfilter llm_info" + ChatColor.WHITE + " - Show current LLM information");
         sender.sendMessage(ChatColor.YELLOW + "/chatfilter reload" + ChatColor.WHITE + " - Reload filters from JSON");
         return true;
     }
