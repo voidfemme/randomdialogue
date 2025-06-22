@@ -6,7 +6,9 @@ import com.chatfilter.filter.ChatFilter;
 import com.chatfilter.filter.FilterDefinition;
 import com.chatfilter.filter.FilterManager;
 import org.bukkit.entity.Player;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import java.util.logging.Logger;
 
 import java.time.LocalDate;
@@ -240,7 +242,7 @@ public class PlayerFilterManager {
     }
     
     private void sendFilterMessage(Player player, String prefix, FilterDefinition filter, String suffix) {
-        player.sendMessage(prefix + filter.getChatColor() + filter.getDisplayName() + ChatColor.RESET + suffix);
+        player.sendMessage(prefix + filter.getChatColor() + filter.getDisplayName() + suffix);
     }
     
     public void clearPlayerData(UUID playerId) {

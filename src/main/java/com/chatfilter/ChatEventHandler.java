@@ -9,10 +9,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import java.util.logging.Logger;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.Component;
+
 
 import java.util.UUID;
 
@@ -38,11 +40,11 @@ public class ChatEventHandler implements Listener {
     }
     
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onChatMessage(AsyncPlayerChatEvent event) {
+    public void onChatMessage(AsyncChatEvent event) {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         String playerName = player.getName();
-        String originalMessage = event.getMessage();
+        String originalMessage = event.message().toString();
         
         // Check if player has filtering enabled
         if (!playerManager.isPlayerEnabled(playerId)) {
@@ -103,7 +105,7 @@ public class ChatEventHandler implements Listener {
         String finalMessage = "<" + playerName + "> " + transformedMessage;
         
         // Broadcast to all players
-        Bukkit.broadcastMessage(finalMessage);
+        Bukkit.broadcast(Component.text(finalMessage));
         
         if (config.enableDebugLogging) {
             LOGGER.info("Transformed message from " + playerName + ": '" + originalMessage + "' -> '" + transformedMessage + "'");
@@ -115,7 +117,7 @@ public class ChatEventHandler implements Listener {
         
         // Send original message normally
         String finalMessage = "<" + playerName + "> " + originalMessage;
-        Bukkit.broadcastMessage(finalMessage);
+        Bukkit.broadcast(Component.text(finalMessage));
         
         LOGGER.info("Sent fallback message from " + playerName + ": " + originalMessage);
     }
@@ -125,7 +127,7 @@ public class ChatEventHandler implements Listener {
         
         // Send a normal-looking message but with error content
         String finalMessage = "<" + playerName + "> [Message processing error]";
-        Bukkit.broadcastMessage(finalMessage);
+        Bukkit.broadcast(Component.text(finalMessage));
         
         // Send detailed error to the sender
         player.sendMessage("Your message could not be processed: " + errorMessage);

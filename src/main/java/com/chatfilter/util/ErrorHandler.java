@@ -3,7 +3,9 @@ package com.chatfilter.util;
 import com.chatfilter.ChatFilterMod;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import java.util.logging.Logger;
 
 import java.util.concurrent.CompletableFuture;
@@ -42,12 +44,12 @@ public class ErrorHandler {
     }
     
     public static void notifyPlayerError(Player player, String error, boolean showToOthers) {
-        String errorMessage = ChatColor.RED + "❌ " + error;
+        String errorMessage = NamedTextColor.RED + "❌ " + error;
         player.sendMessage(errorMessage);
         
         if (showToOthers) {
-            String publicMessage = ChatColor.YELLOW + "⚠ " + player.getName() + "'s message could not be processed";
-            Bukkit.broadcastMessage(publicMessage);
+            String publicMessage = NamedTextColor.YELLOW + "⚠ " + player.getName() + "'s message could not be processed";
+            Bukkit.broadcast(Component.text(publicMessage));
         }
     }
     

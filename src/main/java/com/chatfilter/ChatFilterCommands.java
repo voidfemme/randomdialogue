@@ -14,7 +14,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import java.util.logging.Logger;
 
 import java.util.Arrays;
@@ -37,7 +39,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         // Admin-only access
         if (!sender.hasPermission("randomdialogue.admin")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            sender.sendMessage(NamedTextColor.RED + "You don't have permission to use this command.");
             return true;
         }
         
@@ -121,12 +123,12 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     private boolean handleModeCommand(CommandSender sender, String[] args) {
         if (args.length < 2) {
             FilterMode currentMode = playerManager.getCurrentMode();
-            sender.sendMessage(ChatColor.AQUA + "Current filter mode: " + ChatColor.YELLOW + currentMode.name().toLowerCase());
+            sender.sendMessage(NamedTextColor.AQUA + "Current filter mode: " + NamedTextColor.YELLOW + currentMode.name().toLowerCase());
             return true;
         }
         
         if (!sender.hasPermission("randomdialogue.admin")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to change the server mode.");
+            sender.sendMessage(NamedTextColor.RED + "You don't have permission to change the server mode.");
             return true;
         }
         
@@ -143,21 +145,21 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             }
             
             String message = switch (newMode) {
-                case DISABLED -> ChatColor.RED + "Chat filters have been DISABLED!";
-                case MANUAL -> ChatColor.GREEN + "Chat filters set to MANUAL mode - players can choose their own!";
-                case DAILY_RANDOM -> ChatColor.GOLD + "Chat filters set to DAILY RANDOM mode - new personality each day!";
-                case SESSION_RANDOM -> ChatColor.AQUA + "Chat filters set to SESSION RANDOM mode - new personality each login!";
-                case CHAOS_MODE -> ChatColor.DARK_RED + "" + ChatColor.BOLD + "CHAOS MODE ACTIVATED! Every message is a different personality!";
+                case DISABLED -> NamedTextColor.RED + "Chat filters have been DISABLED!";
+                case MANUAL -> NamedTextColor.GREEN + "Chat filters set to MANUAL mode - players can choose their own!";
+                case DAILY_RANDOM -> NamedTextColor.GOLD + "Chat filters set to DAILY RANDOM mode - new personality each day!";
+                case SESSION_RANDOM -> NamedTextColor.AQUA + "Chat filters set to SESSION RANDOM mode - new personality each login!";
+                case CHAOS_MODE -> NamedTextColor.DARK_RED + "" + TextDecoration.BOLD + "CHAOS MODE ACTIVATED! Every message is a different personality!";
             };
             
-            sender.getServer().broadcastMessage(message);
-            sender.sendMessage(ChatColor.GREEN + "Filter mode changed from " + oldMode.name().toLowerCase() + " to " + newMode.name().toLowerCase());
+            sender.getServer().broadcast(Component.text(message));
+            sender.sendMessage(NamedTextColor.GREEN + "Filter mode changed from " + oldMode.name().toLowerCase() + " to " + newMode.name().toLowerCase());
             
             LOGGER.info("Filter mode changed from " + oldMode + " to " + newMode + " by " + sender.getName());
             return true;
             
         } catch (IllegalArgumentException e) {
-            sender.sendMessage(ChatColor.RED + "Invalid mode. Available modes: " + 
+            sender.sendMessage(NamedTextColor.RED + "Invalid mode. Available modes: " + 
                              Arrays.stream(FilterMode.values())
                                    .map(m -> m.name().toLowerCase())
                                    .collect(Collectors.joining(", ")));
@@ -167,52 +169,52 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     
     private boolean enablePlayerFilter(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Usage: /chatfilter enable <player>");
+            sender.sendMessage(NamedTextColor.RED + "Usage: /chatfilter enable <player>");
             return true;
         }
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
+            sender.sendMessage(NamedTextColor.RED + "Player not found: " + args[1]);
             return true;
         }
         
         if (playerManager.getCurrentMode() == FilterMode.DISABLED) {
-            sender.sendMessage(ChatColor.RED + "Chat filters are currently disabled on the server.");
+            sender.sendMessage(NamedTextColor.RED + "Chat filters are currently disabled on the server.");
             return true;
         }
         
         playerManager.setPlayerEnabled(targetPlayer.getUniqueId(), true);
-        sender.sendMessage(ChatColor.GREEN + "Chat filters enabled for " + targetPlayer.getName());
+        sender.sendMessage(NamedTextColor.GREEN + "Chat filters enabled for " + targetPlayer.getName());
         return true;
     }
     
     private boolean disablePlayerFilter(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Usage: /chatfilter disable <player>");
+            sender.sendMessage(NamedTextColor.RED + "Usage: /chatfilter disable <player>");
             return true;
         }
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
+            sender.sendMessage(NamedTextColor.RED + "Player not found: " + args[1]);
             return true;
         }
         
         playerManager.setPlayerEnabled(targetPlayer.getUniqueId(), false);
-        sender.sendMessage(ChatColor.GREEN + "Chat filters disabled for " + targetPlayer.getName());
+        sender.sendMessage(NamedTextColor.GREEN + "Chat filters disabled for " + targetPlayer.getName());
         return true;
     }
     
     private boolean handleSetCommand(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "Usage: /chatfilter set <player> <filter>");
+            sender.sendMessage(NamedTextColor.RED + "Usage: /chatfilter set <player> <filter>");
             return true;
         }
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
+            sender.sendMessage(NamedTextColor.RED + "Player not found: " + args[1]);
             return true;
         }
         
@@ -221,32 +223,32 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             playerManager.setPlayerFilter(targetPlayer.getUniqueId(), filter);
             playerManager.setPlayerEnabled(targetPlayer.getUniqueId(), true);
             
-            sender.sendMessage(ChatColor.GREEN + "Filter set for " + targetPlayer.getName() + " to: " + filter.getChatColor() + 
-                             filter.getDisplayName() + ChatColor.GREEN + " " + filter.emoji);
+            sender.sendMessage(NamedTextColor.GREEN + "Filter set for " + targetPlayer.getName() + " to: " + filter.getChatColor() + 
+                             filter.getDisplayName() + NamedTextColor.GREEN + " " + filter.emoji);
             return true;
         } else {
-            sender.sendMessage(ChatColor.RED + "Invalid filter. Use " + ChatColor.AQUA + "/chatfilter list" + 
-                             ChatColor.RED + " to see available filters.");
+            sender.sendMessage(NamedTextColor.RED + "Invalid filter. Use " + NamedTextColor.AQUA + "/chatfilter list" + 
+                             NamedTextColor.RED + " to see available filters.");
             return true;
         }
     }
     
     private boolean rerollFilter(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Usage: /chatfilter reroll <player>");
+            sender.sendMessage(NamedTextColor.RED + "Usage: /chatfilter reroll <player>");
             return true;
         }
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
+            sender.sendMessage(NamedTextColor.RED + "Player not found: " + args[1]);
             return true;
         }
         
         if (playerManager.rerollPlayerFilter(targetPlayer)) {
-            sender.sendMessage(ChatColor.GREEN + "Filter rerolled for " + targetPlayer.getName());
+            sender.sendMessage(NamedTextColor.GREEN + "Filter rerolled for " + targetPlayer.getName());
         } else {
-            sender.sendMessage(ChatColor.YELLOW + "Reroll is not available in " + 
+            sender.sendMessage(NamedTextColor.YELLOW + "Reroll is not available in " + 
                              playerManager.getCurrentMode().name().toLowerCase() + " mode.");
         }
         return true;
@@ -255,46 +257,46 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     private boolean showStatus(CommandSender sender, String[] args) {
         if (args.length < 2) {
             FilterMode currentMode = playerManager.getCurrentMode();
-            sender.sendMessage(ChatColor.AQUA + "=== Server Status ===");
-            sender.sendMessage(ChatColor.AQUA + "Current server mode: " + ChatColor.YELLOW + currentMode.name().toLowerCase());
-            sender.sendMessage(ChatColor.AQUA + "Enabled players: " + ChatColor.YELLOW + playerManager.getEnabledPlayers().size());
+            sender.sendMessage(NamedTextColor.AQUA + "=== Server Status ===");
+            sender.sendMessage(NamedTextColor.AQUA + "Current server mode: " + NamedTextColor.YELLOW + currentMode.name().toLowerCase());
+            sender.sendMessage(NamedTextColor.AQUA + "Enabled players: " + NamedTextColor.YELLOW + playerManager.getEnabledPlayers().size());
             return true;
         }
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
+            sender.sendMessage(NamedTextColor.RED + "Player not found: " + args[1]);
             return true;
         }
         
         PlayerFilterManager.PlayerFilterStats stats = playerManager.getPlayerStats(targetPlayer.getUniqueId());
-        sender.sendMessage(ChatColor.AQUA + "=== " + targetPlayer.getName() + "'s Filter Status ===");
-        sender.sendMessage(ChatColor.AQUA + "Server Mode: " + ChatColor.YELLOW + stats.mode.name().toLowerCase());
-        sender.sendMessage(ChatColor.AQUA + "Enabled: " + (stats.enabled ? ChatColor.GREEN + "Yes" : ChatColor.RED + "No"));
+        sender.sendMessage(NamedTextColor.AQUA + "=== " + targetPlayer.getName() + "'s Filter Status ===");
+        sender.sendMessage(NamedTextColor.AQUA + "Server Mode: " + NamedTextColor.YELLOW + stats.mode.name().toLowerCase());
+        sender.sendMessage(NamedTextColor.AQUA + "Enabled: " + (stats.enabled ? NamedTextColor.GREEN + "Yes" : NamedTextColor.RED + "No"));
         
         if (stats.enabled && stats.currentFilter != null) {
-            sender.sendMessage(ChatColor.AQUA + "Current Filter: " + stats.currentFilter.getChatColor() + 
-                             stats.currentFilter.getDisplayName() + ChatColor.AQUA + " " + stats.currentFilter.emoji);
+            sender.sendMessage(NamedTextColor.AQUA + "Current Filter: " + stats.currentFilter.getChatColor() + 
+                             stats.currentFilter.getDisplayName() + NamedTextColor.AQUA + " " + stats.currentFilter.emoji);
         }
         
         if (stats.lastAssignedDate != null) {
-            sender.sendMessage(ChatColor.AQUA + "Last Assigned: " + ChatColor.YELLOW + stats.lastAssignedDate);
+            sender.sendMessage(NamedTextColor.AQUA + "Last Assigned: " + NamedTextColor.YELLOW + stats.lastAssignedDate);
         }
         
         return true;
     }
     
     private boolean listFilters(CommandSender sender) {
-        sender.sendMessage(ChatColor.AQUA + "=== Available Chat Filters ===");
+        sender.sendMessage(NamedTextColor.AQUA + "=== Available Chat Filters ===");
         for (FilterDefinition filter : FilterManager.getInstance().getEnabledFilters()) {
-            sender.sendMessage(filter.getChatColor() + filter.getDisplayName() + ChatColor.RESET + " " + 
-                             filter.emoji + ChatColor.GRAY + " - " + filter.name.toLowerCase());
+            sender.sendMessage(filter.getChatColor() + filter.getDisplayName() + " " + 
+                             filter.emoji + NamedTextColor.GRAY + " - " + filter.name.toLowerCase());
         }
         return true;
     }
 
     private boolean showPlayerFilters(CommandSender sender) {
-        sender.sendMessage(ChatColor.AQUA + "=== Current Filter Assignments ===");
+        sender.sendMessage(NamedTextColor.AQUA + "=== Current Filter Assignments ===");
         boolean anyPlayersOnline = false;
         for (Player player : Bukkit.getOnlinePlayers()) {
             anyPlayersOnline = true;
@@ -302,65 +304,65 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             PlayerFilterStats stats = playerManager.getPlayerStats(player.getUniqueId());
 
             // Get the player's filter stats
-            String status = stats.enabled ? ChatColor.GREEN + "✓" : ChatColor.RED + "✗";
+            String status = stats.enabled ? NamedTextColor.GREEN + "✓" : NamedTextColor.RED + "✗";
             String filterName = stats.currentFilter != null ? stats.currentFilter.getName() : "None";
 
-            sender.sendMessage(ChatColor.YELLOW + player.getName() +
-                               ChatColor.WHITE + ": " + status + " " +
-                               ChatColor.AQUA + filterName +
-                               ChatColor.GRAY + " (" + stats.mode + ")");
+            sender.sendMessage(NamedTextColor.YELLOW + player.getName() +
+                               NamedTextColor.WHITE + ": " + status + " " +
+                               NamedTextColor.AQUA + filterName +
+                               NamedTextColor.GRAY + " (" + stats.mode + ")");
         }
 
         if (!anyPlayersOnline) {
-            sender.sendMessage(ChatColor.GRAY + "No players online.");
+            sender.sendMessage(NamedTextColor.GRAY + "No players online.");
         }
 
-        sender.sendMessage(ChatColor.GOLD + "==================================");
+        sender.sendMessage(NamedTextColor.GOLD + "==================================");
         return true;
     }
     
     private boolean reloadFilters(CommandSender sender) {
         FilterManager.getInstance().reloadFilters();
-        sender.sendMessage(ChatColor.GREEN + "Filters reloaded from JSON configuration.");
+        sender.sendMessage(NamedTextColor.GREEN + "Filters reloaded from JSON configuration.");
         return true;
     }
 
     private boolean handleInfoCommand(CommandSender sender, String[] args) {
         ChatFilterConfig config = ChatFilterConfig.getInstance();
 
-        sender.sendMessage(ChatColor.GOLD + "=== Chat Filter Information ===");
-        sender.sendMessage(ChatColor.AQUA + "Provider: " + ChatColor.WHITE + config.llmProvider);
-        sender.sendMessage(ChatColor.AQUA + "Model: " + ChatColor.WHITE + config.getCurrentModel());
-        sender.sendMessage(ChatColor.AQUA + "Endpoint: " + ChatColor.WHITE + config.getCurrentEndpoint());
-        sender.sendMessage(ChatColor.AQUA + "Current Mode: " + ChatColor.YELLOW + playerManager.getCurrentMode().name().toLowerCase());
+        sender.sendMessage(NamedTextColor.GOLD + "=== Chat Filter Information ===");
+        sender.sendMessage(NamedTextColor.AQUA + "Provider: " + NamedTextColor.WHITE + config.llmProvider);
+        sender.sendMessage(NamedTextColor.AQUA + "Model: " + NamedTextColor.WHITE + config.getCurrentModel());
+        sender.sendMessage(NamedTextColor.AQUA + "Endpoint: " + NamedTextColor.WHITE + config.getCurrentEndpoint());
+        sender.sendMessage(NamedTextColor.AQUA + "Current Mode: " + NamedTextColor.YELLOW + playerManager.getCurrentMode().name().toLowerCase());
         
         if (sender instanceof Player player) {
             FilterDefinition currentFilter = playerManager.getPlayerFilter(player.getUniqueId());
-            sender.sendMessage(ChatColor.AQUA + "Your Current Filter: " + currentFilter.getChatColor() + 
+            sender.sendMessage(NamedTextColor.AQUA + "Your Current Filter: " + currentFilter.getChatColor() + 
                              currentFilter.getDisplayName() + " " + currentFilter.emoji);
         }
         
-        sender.sendMessage(ChatColor.GRAY + "Your messages are transformed using AI to add personality.");
-        sender.sendMessage(ChatColor.GRAY + "Original messages are not stored permanently.");
-        sender.sendMessage(ChatColor.GREEN + "Use " + ChatColor.AQUA + "/chatfilter help" + 
-                         ChatColor.GREEN + " for more commands.");
+        sender.sendMessage(NamedTextColor.GRAY + "Your messages are transformed using AI to add personality.");
+        sender.sendMessage(NamedTextColor.GRAY + "Original messages are not stored permanently.");
+        sender.sendMessage(NamedTextColor.GREEN + "Use " + NamedTextColor.AQUA + "/chatfilter help" + 
+                         NamedTextColor.GREEN + " for more commands.");
         
         return true;
     }
     
     private boolean showHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.AQUA + "=== Random Dialogue Admin Commands ===");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter status [player]" + ChatColor.WHITE + " - Show server or player status");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter list" + ChatColor.WHITE + " - List available filters");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter mode <mode>" + ChatColor.WHITE + " - Change server mode");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter enable <player>" + ChatColor.WHITE + " - Enable filters for player");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter disable <player>" + ChatColor.WHITE + " - Disable filters for player");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter set <player> <filter>" + ChatColor.WHITE + " - Set filter for player");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter reroll <player>" + ChatColor.WHITE + " - Reroll filter for player");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter who" + ChatColor.WHITE + " - Show every player's current filter status");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter players" + ChatColor.WHITE + " - Show every player's current filter status");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter llm_info" + ChatColor.WHITE + " - Show current LLM information");
-        sender.sendMessage(ChatColor.YELLOW + "/chatfilter reload" + ChatColor.WHITE + " - Reload filters from JSON");
+        sender.sendMessage(NamedTextColor.AQUA + "=== Random Dialogue Admin Commands ===");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter status [player]" + NamedTextColor.WHITE + " - Show server or player status");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter list" + NamedTextColor.WHITE + " - List available filters");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter mode <mode>" + NamedTextColor.WHITE + " - Change server mode");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter enable <player>" + NamedTextColor.WHITE + " - Enable filters for player");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter disable <player>" + NamedTextColor.WHITE + " - Disable filters for player");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter set <player> <filter>" + NamedTextColor.WHITE + " - Set filter for player");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter reroll <player>" + NamedTextColor.WHITE + " - Reroll filter for player");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter who" + NamedTextColor.WHITE + " - Show every player's current filter status");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter players" + NamedTextColor.WHITE + " - Show every player's current filter status");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter llm_info" + NamedTextColor.WHITE + " - Show current LLM information");
+        sender.sendMessage(NamedTextColor.YELLOW + "/chatfilter reload" + NamedTextColor.WHITE + " - Reload filters from JSON");
         return true;
     }
 }

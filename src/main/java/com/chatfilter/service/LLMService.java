@@ -8,11 +8,11 @@ import com.google.gson.JsonSyntaxException;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import java.util.logging.Logger;
 
 import java.io.IOException;
@@ -218,7 +218,7 @@ public class LLMService {
                 }
             }
             
-            try (CloseableHttpResponse response = httpClient.execute(request)) {
+            try (ClassicHttpResponse response = httpClient.executeOpen(null, request, null)) {
                 String responseBody = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
                 
                 if (response.getCode() != 200) {

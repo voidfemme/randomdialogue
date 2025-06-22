@@ -1,6 +1,8 @@
 package com.chatfilter.filter;
 
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 // Legacy enum wrapper - now delegates to FilterManager
 public enum ChatFilter {
@@ -29,7 +31,7 @@ public enum ChatFilter {
         return getDefinition().emoji;
     }
     
-    public ChatColor getColor() {
+    public NamedTextColor getColor() {
         return getDefinition().getChatColor();
     }
     

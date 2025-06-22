@@ -1,6 +1,8 @@
 package com.chatfilter.filter;
 
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 public class FilterDefinition {
     public String name;
@@ -21,11 +23,11 @@ public class FilterDefinition {
         this.enabled = enabled;
     }
     
-    public ChatColor getChatColor() {
+    public NamedTextColor getChatColor() {
         try {
-            return ChatColor.valueOf(color.toUpperCase());
+            return NamedTextColor.NAMES.value(color.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return ChatColor.WHITE; // fallback
+            return NamedTextColor.WHITE; // fallback
         }
     }
     
