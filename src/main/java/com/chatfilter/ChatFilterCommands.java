@@ -37,11 +37,6 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        // Admin-only access
-        if (!sender.hasPermission("randomdialogue.admin")) {
-            sender.sendMessage(Component.text("You don't have permission to use this command.", NamedTextColor.RED));
-            return true;
-        }
         
         if (args.length == 0) {
             return showHelp(sender);
@@ -99,10 +94,19 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
         
         if (args.length == 1) {
-            String[] subcommands = {"mode", "enable", "disable", "set", "reroll", "status", "list", "who", "players", "reload", "llm_info"};
+            String[] subcommands = {"enable", "disable", "set", "reroll", "status", "list", "who", "players", "llm_info"};
+            String[] adminCommands = {"mode", "reload"};
             for (String sub : subcommands) {
                 if (sub.startsWith(args[0].toLowerCase())) {
                     completions.add(sub);
+                }
+            }
+
+            if (sender.hasPermission("randomdialogue.admin")) {
+                for (String sub : adminCommands) {
+                    if (sub.startsWith(args[0].toLowerCase())) {
+                        completions.add(sub);
+                    }
                 }
             }
         } else if (args.length == 2) {
@@ -444,18 +448,45 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     }
     
     private boolean showHelp(CommandSender sender) {
-        sender.sendMessage(Component.text("=== Random Dialogue Admin Commands ===", NamedTextColor.AQUA));
-        sender.sendMessage(Component.text("/chatfilter status [player]", NamedTextColor.YELLOW).append(Component.text(" - Show server or player status", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter list", NamedTextColor.YELLOW).append(Component.text(" - List available filters", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter mode <mode>", NamedTextColor.YELLOW).append(Component.text(" - Change server mode", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter enable <player>", NamedTextColor.YELLOW).append(Component.text(" - Enable filters for player", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter disable <player>", NamedTextColor.YELLOW).append(Component.text(" - Disable filters for player", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter set <player> <filter>", NamedTextColor.YELLOW).append(Component.text(" - Set filter for player", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter reroll <player>", NamedTextColor.YELLOW).append(Component.text(" - Reroll filter for player", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter who", NamedTextColor.YELLOW).append(Component.text(" - Show every player's current filter status", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter players", NamedTextColor.YELLOW).append(Component.text(" - Show every player's current filter status", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter llm_info", NamedTextColor.YELLOW).append(Component.text(" - Show current LLM information", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter reload", NamedTextColor.YELLOW).append(Component.text(" - Reload filters from JSON", NamedTextColor.WHITE)));
+        boolean isAdmin = sender.hasPermission("randomdialogue.admin");
+        
+        if (isAdmin) {
+            sender.sendMessage(Component.text("=== Random Dialogue Commands (Admin) ===", NamedTextColor.AQUA));
+        } else {
+            sender.sendMessage(Component.text("=== Random Dialogue Commands ===", NamedTextColor.AQUA));
+        }
+        
+        // Player commands (everyone can use)
+        sender.sendMessage(Component.text("/chatfilter status [player]", NamedTextColor.YELLOW)
+            .append(Component.text(" - Show server or player status", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("/chatfilter list", NamedTextColor.YELLOW)
+            .append(Component.text(" - List available filters", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("/chatfilter set <filter>", NamedTextColor.YELLOW)
+            .append(Component.text(" - Set your own filter", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("/chatfilter enable", NamedTextColor.YELLOW)
+            .append(Component.text(" - Enable your filter", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("/chatfilter disable", NamedTextColor.YELLOW)
+            .append(Component.text(" - Disable your filter", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("/chatfilter reroll", NamedTextColor.YELLOW)
+            .append(Component.text(" - Get a random filter", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("/chatfilter who", NamedTextColor.YELLOW)
+            .append(Component.text(" - Show all player filters", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("/chatfilter llm_info", NamedTextColor.YELLOW)
+            .append(Component.text(" - Show AI model information", NamedTextColor.WHITE)));
+        
+        // Admin-only commands
+        if (isAdmin) {
+            sender.sendMessage(Component.text("--- Admin Commands ---", NamedTextColor.RED));
+            sender.sendMessage(Component.text("/chatfilter mode <mode>", NamedTextColor.YELLOW)
+                .append(Component.text(" - Change server mode", NamedTextColor.WHITE)));
+            sender.sendMessage(Component.text("/chatfilter set <player> <filter>", NamedTextColor.YELLOW)
+                .append(Component.text(" - Set filter for another player", NamedTextColor.WHITE)));
+            sender.sendMessage(Component.text("/chatfilter enable <player>", NamedTextColor.YELLOW)
+                .append(Component.text(" - Enable filter for another player", NamedTextColor.WHITE)));
+            sender.sendMessage(Component.text("/chatfilter reload", NamedTextColor.YELLOW)
+                .append(Component.text(" - Reload filter configurations", NamedTextColor.WHITE)));
+        }
+        
         return true;
     }
 }
