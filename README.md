@@ -83,6 +83,8 @@ The mod creates a configuration file at `config/chat-filter.json`. Key settings:
 - `/chatfilter llm_info` - View LLM provider and model information
 - `/chatfilter who` - See everyone's current filter assignments
 
+**Note:** Players can now manage their own filters (enable/disable/reroll) without admin permissions, while admins retain full control over server-wide settings and can manage any player's settings.
+
 ### Admin Commands
 **Player Management:**
 - `/chatfilter enable <player>` - Enable filtering for a specific player
@@ -95,7 +97,17 @@ The mod creates a configuration file at `config/chat-filter.json`. Key settings:
 - `/chatfilter status [player]` - View server status or specific player details
 - `/chatfilter reload` - Reload filters and configuration
 
+**Configuration Management:**
+- `/chatfilter reload_config` - Reload main configuration file
+- `/chatfilter reload_all` - Reload both filter and main configuration files
+
 **Note:** Players have full control over their own chat experience, while admins can manage server-wide settings and assist individual players.
+
+### Configuration Validation
+
+The mod now validates configuration on startup and will prevent server start if
+critical errors are found. Use `/chatfilter reload_config` to reload and
+validate configuration changes without restarting the server.
 
 ### Quote Preservation System
 
@@ -229,6 +241,8 @@ When debug logging is enabled, you'll see:
 3. **Messages not transforming** - Check server logs for errors, ensure API provider is accessible
 4. **Quotes being modified** - Check debug logs for quote preservation issues, ensure you're using standard quote marks (`"`)
 5. **Unexpected transformations** - Review conversation context in debug logs, consider if recent chat history is affecting results
+6. **"Critical configuration errors detected"** - Check your config file syntax and required fields, fix errors and restart or use `/chatfilter reload_config`
+7. **Configuration reload failed** - Use `/chatfilter reload_config` to test config changes before restarting
 
 ### Known Issues
 
