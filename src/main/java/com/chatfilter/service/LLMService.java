@@ -323,6 +323,28 @@ public class LLMService {
         String trimmed = message.trim();
         return trimmed.startsWith("\"") && trimmed.endsWith("\"") && trimmed.length() >= 2;
     }
+
+    private boolean isDoubleQuoted(String message) {
+        if (message == null || message.length() < 4) {
+            return false;
+        }
+
+        String trimmed = message.trim();
+        // Check for double quotes: ""message""
+        return trimmed.startsWith("\"\"") && trimmed.endsWith("\"\"") && trimmed.length() >= 4;
+    }
+
+    private String removeOuterQuotes(String message) {
+        if (message == null || message.length() < 2) {
+            return message;
+        }
+
+        String trimmed = message.trim();
+        if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+            return trimmed.substring(1, trimmed.length() -1);
+        }
+        return message;
+    }
     
     // Add message to conversation history
     public void addMessageToHistory(String playerName, String message, boolean isTransformed) {
@@ -402,20 +424,32 @@ public class LLMService {
             long startTime = System.currentTimeMillis();
             Exception lastError = null;
             String transformed = null;
+            ChatFilterConfig config = ChatFilterConfig.getInstance();
             
-            try {
-                // Check if message is fully quoted - if so, skip transformation
-                if (isFullyQuoted(originalMessage)) {
-                    writeToDebugLog("ASYNC SKIPPING TRANSFORMATION - Message is fully quoted: " + originalMessage);
-                    // Still add to history for context
-                    addMessageToHistory(playerName, originalMessage, false);
-                    return new TransformationResult(originalMessage, null);
+            // Check if message is fully quoted - if so, skip transformation
+            if (isFullyQuoted(originalMessage)) {
+                if(isDoubleQuoted(originalMessage)) {
+                    // Double quoted; ""message"" -> "message" (remove outer quotes only)
+                    String result = removeOuterQuotes(originalMessage);
+                    writeToDebugLog("DOUBLE QUOTED - Removing outer quotes: " + originalMessage + " -> " + result);
+                    return new TransformationResult(result, null);
+                } else {
+                    // Single quoted: "message" -> message (remove quotes entirely)
+                    String result = removeOuterQuotes(originalMessage);
+                    writeToDebugLog("SINGLE QUOTED - Removing quotes entirely: " + originalMessage + " -> " + result);
+                    return new TransformationResult(result, null);
                 }
+            }
+
+            if (config.rateLimitEnabled && !checkRateLimit(playerName)) {
+                writeToDebugLog("RATE LIMIT EXCEEDED - Returning original message for player: " + playerName);
+                return new TransformationResult(originalMessage, null);
+            }
+
+            try {
                 
                 // Add original message to history
                 addMessageToHistory(playerName, originalMessage, false);
-                
-                transformed = transformMessage(originalMessage, filter, playerName);
                 
                 // Add transformed message to history
                 addMessageToHistory(playerName, transformed, true);
@@ -425,12 +459,46 @@ public class LLMService {
                 
                 // Log successful transformation
                 logTransformationResult(playerName, originalMessage, transformed, filter, startTime, false, null);
+
+                // CHECK CACHE FIRST
+                String cacheKey = getCacheKey(originalMessage, filter, playerName);
+                CachedResponse cached = cache.get(cacheKey);
+                if (cached != null && !cached.isExpired()) {
+                    writeToDebugLog("CACHE HIT for " + playerName + ": " + originalMessage);
+
+                    // Add cached result to history
+                    addMessageToHistory(playerName, cached.response, true);
+
+                    // Check for quote preservation issues
+                    String cacheFollowUpMessage = checkQuotePreservation(originalMessage, cached.response, playerName);
+
+                    // Log successful transformation from cache
+                    logTransformationResult(playerName, originalMessage, cached.response, filter, startTime, true, null);
+
+                    return new TransformationResult(cached.response, cacheFollowUpMessage);
+                }
+
+                // Call the LLM API
+                transformed = callLLMAPI(originalMessage, filter, playerName);
+
+                // Cache the result
+                if (config.cacheEnabled) {
+                    cache.put(cacheKey, new CachedResponse(transformed, System.currentTimeMillis()));
+                }
+
+                // Add transformed message to history
+                addMessageToHistory(playerName, transformed, true);
+
+                // Check for quote preservation issues
+                String apiFollowUpMessage = checkQuotePreservation(originalMessage, transformed, playerName);
+
+                // Log successful transformation
+                logTransformationResult(playerName, originalMessage, transformed, filter, startTime, false, null);
                 
-                return new TransformationResult(transformed, followUpMessage);
+                return new TransformationResult(transformed, apiFollowUpMessage);
             } catch (Exception e) {
                 lastError = e;
                 LOGGER.severe("Failed to transform message: " + originalMessage + " - " + e.getMessage());
-                ChatFilterConfig config = ChatFilterConfig.getInstance();
                 String fallback = config.enableFallback ? originalMessage : "[Message transformation failed]";
                 
                 // Log failed transformation
@@ -439,82 +507,6 @@ public class LLMService {
                 return new TransformationResult(fallback, null);
             }
         }, executor);
-    }
-    
-    public String transformMessage(String originalMessage, FilterDefinition filter, String playerName) throws LLMException {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
-        long startTime = System.currentTimeMillis();
-        
-        // Check if message is fully quoted - if so, return as-is without transformation
-        if (isFullyQuoted(originalMessage)) {
-            writeToDebugLog("SKIPPING TRANSFORMATION - Message is fully quoted: " + originalMessage);
-            return originalMessage;
-        }
-        
-        // Check rate limiting
-        if (config.rateLimitEnabled && !checkRateLimit(playerName)) {
-            throw new LLMException("Rate limit exceeded for player: " + playerName);
-        }
-        
-        // Build the context prompt
-        String contextPrompt = buildContextPrompt(playerName, originalMessage, filter);
-        
-        // Check cache (include player context in cache key)
-        String cacheKey = getCacheKey(originalMessage, filter, playerName);
-        if (config.cacheEnabled) {
-            CachedResponse cached = cache.get(cacheKey);
-            if (cached != null && !cached.isExpired()) {
-                if (config.enableDebugLogging) {
-                    LOGGER.fine("Cache hit for message: " + originalMessage);
-                }
-                // Log cache hit (note: cache doesn't preserve quote follow-up info, that's intentional)
-                logTransformationResult(playerName, originalMessage, cached.response, filter, startTime, true, null);
-                return cached.response;
-            }
-        }
-        
-        // Log the transformation attempt with full prompt
-        logTransformationAttempt(playerName, originalMessage, filter, contextPrompt, startTime);
-        
-        // Validate configuration
-        if (!config.hasValidApiKey()) {
-            throw new LLMException("No valid API key configured for provider: " + config.llmProvider);
-        }
-        
-        String response = null;
-        Exception lastException = null;
-        
-        // Retry logic
-        for (int attempt = 0; attempt <= config.retryAttempts; attempt++) {
-            try {
-                response = callLLMAPI(originalMessage, filter, playerName);
-                break;
-            } catch (Exception e) {
-                lastException = e;
-                if (attempt < config.retryAttempts) {
-                    LOGGER.warning("LLM request failed (attempt " + (attempt + 1) + " of " + 
-                                  (config.retryAttempts + 1) + "), retrying... " + e.getMessage());
-                    writeToDebugLog("RETRY ATTEMPT " + (attempt + 1) + " for player " + playerName + ": " + e.getMessage());
-                    try {
-                        Thread.sleep(1000 * (attempt + 1)); // Exponential backoff
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        throw new LLMException("Request interrupted", ie);
-                    }
-                }
-            }
-        }
-        
-        if (response == null) {
-            throw new LLMException("All retry attempts failed", lastException);
-        }
-        
-        // Cache the response
-        if (config.cacheEnabled) {
-            cache.put(cacheKey, new CachedResponse(response, System.currentTimeMillis()));
-        }
-        
-        return response;
     }
     
     private String checkQuotePreservation(String originalMessage, String transformedMessage, String playerName) {

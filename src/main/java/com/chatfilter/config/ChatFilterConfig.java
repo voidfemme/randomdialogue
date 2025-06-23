@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ChatFilterConfig {
     private static final Logger LOGGER = Logger.getLogger(ChatFilterConfig.class.getName());
@@ -178,6 +180,58 @@ public class ChatFilterConfig {
             defaultFilterMode = "MANUAL";
         }
     }
+
+    public ValidationResult validateConfiguration() {
+        ValidationResult result = new ValidationResult();
+
+        // Check for critical issues that validateAndFix() can't fix
+        if (!hasValidApiKey()) {
+            switch (llmProvider.toLowerCase()) {
+                case "openai":
+                    result.addError("OpenAI API key is required but not set");
+                    break;
+                case "anthropic":
+                    result.addError("Anthropic API key is required but not set");
+                    break;
+                case "groq":
+                    result.addError("Groq API key is required but not set");
+                    break;
+                case "local":
+                    result.addError("Local API endpoint is required but not set");
+                    break;
+            }
+        }
+
+        // Check for potential issues (things that are technically valid but might be problems)
+        if (timeoutSeconds < 5) {
+            result.addWarning("Very short timeout (" + timeoutSeconds + "s) may cause frequent failures");
+        }
+
+        if (rateLimitEnabled && rateLimitPerMinute > 50) {
+            result.addWarning("High rate limit (" + rateLimitPerMinute + "/min) may be expensive");
+        }
+
+        return result;
+    }
+
+    public boolean validateAndLog() {
+        ValidationResult result = validateConfiguration();
+
+        if (result.hasErrors()) {
+            LOGGER.severe("Configuration validation failed:");
+            for (String error : result.getErrors()) {
+                LOGGER.severe(" ERROR: " + error);
+            }
+        }
+
+        if (result.hasWarnings()) {
+            for (String warning : result.getWarnings()) {
+                LOGGER.warning(" WARNING: " + warning);
+            }
+        }
+
+        return !result.hasErrors();
+    }
     
     private boolean isValidProvider(String provider) {
         return provider != null && (
@@ -267,5 +321,22 @@ public class ChatFilterConfig {
                 LOGGER.info("Loaded Groq API key from environment variable");
             }
         }
+    }
+
+    public static void resetInstance() {
+        instance = null;
+        LOGGER.info("Configuration instance reset - will reload on next access");
+    }
+
+    public void logConfigStatus() {
+        LOGGER.info("=== Configuration Status ===");
+        LOGGER.info("Provider: " + llmProvider);
+        LOGGER.info("Model: " + getCurrentModel());
+        LOGGER.info("Endpoint: " + getCurrentEndpoint());
+        LOGGER.info("Max tokens: " + maxTokens);
+        LOGGER.info("Temperature: " + temperature);
+        LOGGER.info("Timeout: " + timeoutSeconds + "s");
+        LOGGER.info("Rate limit: " + rateLimitPerMinute + " req/min");
+        LOGGER.info("============================");
     }
 }

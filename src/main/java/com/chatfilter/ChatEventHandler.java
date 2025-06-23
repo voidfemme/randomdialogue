@@ -17,7 +17,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-
+import java.util.concurrent.TimeoutException;
 import java.util.UUID;
 
 public class ChatEventHandler implements Listener {
@@ -95,18 +95,23 @@ public class ChatEventHandler implements Listener {
                 }
             })
             .exceptionally(throwable -> {
-                LOGGER.severe("Failed to transform message from " + playerName + ": " + originalMessage + " - " + throwable.getMessage());
+                String errorMessage = "transformation timeout";
+                if (throwable.getCause() instanceof TimeoutException) {
+                    errorMessage = "transformation timeout";
+                } else {
+                    errorMessage = throwable.getMessage();
+                }
+
+                LOGGER.severe("Failed to transform message from " + playerName + ": " + originalMessage + " - " + errorMessage);
                 
                 // Send fallback message if enabled (sync with main thread)
-                if (config.enableFallback) {
-                    Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                    if (config.enableFallback) {
                         sendFallbackMessage(player, originalMessage);
-                    });
-                } else {
-                    Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                    } else {
                         sendErrorMessage(player, "Message transformation failed");
-                    });
-                }
+                    }
+                });
                 return null;
             });
     }

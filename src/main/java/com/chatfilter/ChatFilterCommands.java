@@ -8,6 +8,7 @@ import com.chatfilter.filter.FilterManager;
 import com.chatfilter.player.PlayerFilterManager;
 import com.chatfilter.player.PlayerFilterManager.PlayerFilterStats;
 import com.chatfilter.service.LLMService;
+import com.chatfilter.config.ValidationResult;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,8 +18,9 @@ import org.bukkit.entity.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import java.util.logging.Logger;
 
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     private static final Logger LOGGER = Logger.getLogger(ChatFilterCommands.class.getName());
     
+    private static ChatFilterCommands instance;
     private final PlayerFilterManager playerManager;
     private final LLMService llmService;
     
@@ -58,7 +61,17 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 return enablePlayerFilter(sender, args);
                 }
             case "disable":
-                return disablePlayerFilter(sender, args);
+                if (args.length == 1) {
+                    // Player disabling for themselves
+                    return disablePlayerFilterSelf(sender);
+                } else {
+                    // Admin disabling for another player
+                    if (!sender.hasPermission("randomdialogue.admin")) {
+                        sender.sendMessage(Component.text("You can only disable filters for yourself.", NamedTextColor.RED));
+                        return true;
+                    }
+                    return disablePlayerFilter(sender, args);
+                }
             case "set":
                 if (args.length == 2) {
                     // Player setting their own filter: /chatfilter set <filter>
@@ -70,9 +83,22 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                         return true;
                     }
                 return handleSetCommand(sender, args);
+                } else {
+                    sender.sendMessage(Component.text("Usage: /chatfilter set <filter> OR /chatfilter set <player> <filter>", NamedTextColor.RED));
+                    return true;
                 }
             case "reroll":
+                if (args.length == 1) {
+                    //Player rerolling for themselves
+                    return rerollFilterSelf(sender);
+                } else {
+                    // Admin rerolling for another player
+                    if (!sender.hasPermission("randomdialogue.admin")) {
+                        sender.sendMessage(Component.text("You can only reroll filters for yourself.", NamedTextColor.RED));
+                        return true;
+                    }
                 return rerollFilter(sender, args);
+                }
             case "status":
                 return showStatus(sender, args);
             case "list":
@@ -84,6 +110,10 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 return reloadFilters(sender);
             case "llm_info":
                 return handleInfoCommand(sender, args);
+            case "reload_config":
+                return reloadConfig(sender);
+            case "reload_all":
+                return reloadAll(sender);
             default:
                 return showHelp(sender);
         }
@@ -95,7 +125,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         
         if (args.length == 1) {
             String[] subcommands = {"enable", "disable", "set", "reroll", "status", "list", "who", "players", "llm_info"};
-            String[] adminCommands = {"mode", "reload"};
+            String[] adminCommands = {"mode", "reload", "reload_config", "reload_all"};
             for (String sub : subcommands) {
                 if (sub.startsWith(args[0].toLowerCase())) {
                     completions.add(sub);
@@ -125,18 +155,22 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                     }
                 }
             } else if (args[0].equalsIgnoreCase("set")) {
-                if (args.length == 2) {
-                    // Player setting their own filter - show filter names
-                    for (String filterName : FilterManager.getInstance().getEnabledFilterNames()) {
-                        if (filterName.toLowerCase().startsWith(args[1].toLowerCase())) {
-                            completions.add(filterName.toLowerCase());
-                        }
+                // For set command with 2 args, this could be either:
+                // 1. /chatfilter set <filter> (player setting own filter)
+                // 2. /chatfilter set <player> (admin setting for player, need player names)
+
+                // Show both filter names and player names
+                for (String filterName : FilterManager.getInstance().getEnabledFilterNames()) {
+                    if (filterName.toLowerCase().startsWith(args[1].toLowerCase())) {
+                        completions.add(filterName.toLowerCase());
                     }
-                } else if (args.length == 3) {
-                    // Admin setting for another player - show filter names
-                    for (String filterName : FilterManager.getInstance().getEnabledFilterNames()) {
-                        if (filterName.toLowerCase().startsWith(args[2].toLowerCase())) {
-                            completions.add(filterName.toLowerCase());
+                }
+
+                // Also show player names for admin usage
+                if (sender.hasPermission("randomdialogue.admin")) {
+                    for (Player player : sender.getServer().getOnlinePlayers()) {
+                        if (player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                            completions.add(player.getName());
                         }
                     }
                 }
@@ -153,10 +187,22 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         return completions;
     }
     
+    private boolean disablePlayerFilterSelf(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can disable filters for themselves.", NamedTextColor.RED));
+            return true;
+        }
+
+        playerManager.setPlayerEnabled(player.getUniqueId(), false);
+        sender.sendMessage(Component.text("Chat filters disabled for you!", NamedTextColor.GREEN));
+        return true;
+    }
+    
     private boolean handleModeCommand(CommandSender sender, String[] args) {
         if (args.length < 2) {
             FilterMode currentMode = playerManager.getCurrentMode();
-            sender.sendMessage(Component.text("Current filter mode: ", NamedTextColor.AQUA).append(Component.text(currentMode.name().toLowerCase(), NamedTextColor.YELLOW)));
+            sender.sendMessage(Component.text("Current filter mode: ", NamedTextColor.AQUA)
+                .append(Component.text(currentMode.name().toLowerCase(), NamedTextColor.YELLOW)));
             return true;
         }
         
@@ -363,6 +409,30 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         }
         return true;
     }
+
+    private boolean rerollFilterSelf(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can disable filters for themselves.", NamedTextColor.RED));
+            return true;
+        }
+
+        if (playerManager.getCurrentMode() == FilterMode.DISABLED) {
+            sender.sendMessage(Component.text("Chat filters are currently disabled on the server.", NamedTextColor.RED));
+            return true;
+        }
+
+        if (playerManager.rerollPlayerFilter(player)) {
+            FilterDefinition newFilter = playerManager.getPlayerFilter(player.getUniqueId());
+            sender.sendMessage(Component.text("Your filter has been rerolled to: ", NamedTextColor.GREEN)
+                .append(Component.text(newFilter.getDisplayName()).color(newFilter.getChatColor()))
+                .append(Component.text(" " + newFilter.emoji, NamedTextColor.GREEN)));
+        } else {
+            sender.sendMessage(Component.text("Reroll is not available in ", NamedTextColor.YELLOW)
+                .append(Component.text(playerManager.getCurrentMode().name().toLowerCase(), NamedTextColor.RED))
+                .append(Component.text(" mode.", NamedTextColor.YELLOW)));
+        }
+        return true;
+    }
     
     private boolean showStatus(CommandSender sender, String[] args) {
         if (args.length < 2) {
@@ -447,9 +517,88 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     }
     
     private boolean reloadFilters(CommandSender sender) {
-        FilterManager.getInstance().reloadFilters();
-        sender.sendMessage(Component.text("Filters reloaded from JSON configuration.", NamedTextColor.GREEN));
-        return true;
+        try {
+            FilterManager.getInstance().reloadFilters();
+            sender.sendMessage(Component.text("Filters reloaded from JSON configuration.", NamedTextColor.GREEN));
+            return true;
+        } catch (Exception e) {
+            sender.sendMessage(Component.text("Failed to reload filters: " + e.getMessage(), NamedTextColor.RED));
+            LOGGER.severe("Filter reload failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static void resetInstance() {
+        instance = null;
+    }
+
+    private boolean reloadConfig(CommandSender sender) {
+
+        if (!sender.hasPermission("randomdialogue.admin")) {
+            sender.sendMessage(Component.text("You don't have permission to change the server mode.", NamedTextColor.RED));
+            return true;
+        }
+
+        try {
+            sender.sendMessage(Component.text("Reloading main configuration...", NamedTextColor.YELLOW));
+            
+            // Force reload the config
+            ChatFilterConfig.resetInstance();
+            ChatFilterConfig config = ChatFilterConfig.getInstance();
+            
+            // Validate the reloaded config
+            ValidationResult result = config.validateConfiguration();
+            if (result.hasErrors()) {
+                sender.sendMessage(Component.text("Configuration reload failed with errors:", NamedTextColor.RED));
+                for (String error : result.getErrors()) {
+                    sender.sendMessage(Component.text(" - " + error, NamedTextColor.RED));
+                }
+                return false;
+            } 
+
+            if (result.hasWarnings()) {
+                sender.sendMessage(Component.text("Configuration reloaded with warnings:", NamedTextColor.YELLOW));
+                for (String warning : result.getWarnings()) {
+                    sender.sendMessage(Component.text("  - " + warning, NamedTextColor.YELLOW));
+                }
+            } else {
+                sender.sendMessage(Component.text("Configuration reloaded successfully!", NamedTextColor.GREEN));
+            }
+            
+            // Restart LLM service with new config
+            ChatFilterMod plugin = ChatFilterMod.getInstance();
+            if (plugin.getLLMService() != null) {
+                plugin.getLLMService().shutdown();
+                plugin.reinitializeLLMService();
+                sender.sendMessage(Component.text("LLM Service restarted with new configuration.", NamedTextColor.GREEN));
+            }
+            
+            return true;
+            
+        } catch (Exception e) {
+            sender.sendMessage(Component.text("Failed to reload configuration: " + e.getMessage(), NamedTextColor.RED));
+            LOGGER.severe("Config reload failed: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    private boolean reloadAll(CommandSender sender) {
+        if (!sender.hasPermission("randomdialogue.admin")) {
+            sender.sendMessage(Component.text("reload_config is only available for admin."));
+            return true;
+        }
+
+        boolean configSuccess = reloadConfig(sender);
+        boolean filtersSuccess = reloadFilters(sender);
+
+        
+        if (configSuccess && filtersSuccess) {
+            sender.sendMessage(Component.text("All configurations reloaded successfully!", NamedTextColor.GREEN));
+            return true;
+        } else {
+            sender.sendMessage(Component.text("Some reloads failed. Check console for details.", NamedTextColor.RED));
+            return false;
+        }
     }
 
     private boolean handleInfoCommand(CommandSender sender, String[] args) {
@@ -526,6 +675,10 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 .append(Component.text(" - Enable filter for another player", NamedTextColor.WHITE)));
             sender.sendMessage(Component.text("/chatfilter reload", NamedTextColor.YELLOW)
                 .append(Component.text(" - Reload filter configurations", NamedTextColor.WHITE)));
+            sender.sendMessage(Component.text("/chatfilter reload_config", NamedTextColor.YELLOW)
+                .append(Component.text(" - Reload configuration file", NamedTextColor.WHITE)));
+            sender.sendMessage(Component.text("/chatfilter reload_all", NamedTextColor.YELLOW)
+                .append(Component.text(" - Reload both filter configuration (filters.json) and main configuration file (chat-filter.json)")));
         }
         
         return true;

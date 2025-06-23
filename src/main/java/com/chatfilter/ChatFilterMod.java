@@ -40,6 +40,16 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
         
         // Load configuration
         config = ChatFilterConfig.getInstance();
+
+        // Check for critical configuration issues
+        if (!config.validateAndLog()) {
+            logger.severe("Critical configuration errors detected. Plugin cannot start safely.");
+            logger.severe("Please check your config/chat-filter.json file and fix the errors above.");
+            setEnabled(false);
+            return;
+        }
+
+        config.logConfigStatus();
         
         // Initialize filter manager
         FilterManager.getInstance();
@@ -56,9 +66,6 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
         getCommand("chatfilter").setExecutor(new ChatFilterCommands(playerManager, llmService));
         
         logger.info("Random Dialogue Plugin initialized successfully");
-        
-        // Validate configuration on startup
-        validateConfiguration();
 
         // Handle EssentialsDiscord compatibility
         setupDiscordIntegration();
@@ -148,8 +155,25 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
         return playerManager;
     }
     
-    public LLMService getLlmService() {
+    public LLMService getllmService() {
         return llmService;
+    }
+
+    public void reinitializeLLMService() {
+        try {
+            if (this.llmService != null) {
+                logger.info("Shutting down existing LLM service...");
+                this.llmService.shutdown();
+            }
+
+            logger.info("Creating new LLM service with updated configuration...");
+            this.llmService = new LLMService();
+            logger.info("LLM Service reinitialized successfully");
+        } catch (Exception e) {
+            logger.severe("Failed to reinitialize LLM Service: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("LLM Service reinitialization failed", e);
+        }
     }
     
     public ChatFilterConfig getChatConfig() {
@@ -164,5 +188,9 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
         }
         
         logger.info("Random Dialogue Plugin shutdown complete");
+    }
+
+    public LLMService getLLMService() {
+        return llmService;
     }
 }
