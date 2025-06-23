@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 
 import java.util.UUID;
@@ -71,12 +72,18 @@ public class ChatEventHandler implements Listener {
         
         // Process message asynchronously
         llmService.transformMessageAsync(originalMessage, filter, playerName)
-            .thenAccept(transformedMessage -> {
+            .thenAccept(result -> {
                 try {
                     // Send the transformed message to all players (sync with main thread)
                     Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
-                        sendTransformedMessage(player, transformedMessage, originalMessage);
+                        sendTransformedMessage(player, result.transformedMessage, originalMessage);
+
+                        // If there's a follow up message for quote preservation, send it too
+                        if (result.hasFollowUp()) {
+                            sendQuoteFollowUpMessage(result.followUpMessage);
+                        }
                     });
+
                 } catch (Exception e) {
                     LOGGER.severe("Failed to send transformed message: " + e.getMessage());
                     // Send original message as fallback
@@ -102,6 +109,13 @@ public class ChatEventHandler implements Listener {
                 }
                 return null;
             });
+    }
+
+    private void sendQuoteFollowUpMessage(String followUpMessage) {
+        // Send the quote preservation follow-up message as "chatfilter" user
+        // Using gray color to make it less intrusive
+        Bukkit.broadcast(Component.text("<chatfilter> ", NamedTextColor.GRAY)
+            .append(Component.text(followUpMessage, NamedTextColor.WHITE)));
     }
     
     private void sendTransformedMessage(Player player, String transformedMessage, String originalMessage) {
@@ -142,7 +156,8 @@ public class ChatEventHandler implements Listener {
         Bukkit.broadcast(Component.text(finalMessage));
         
         // Send detailed error to the sender
-        player.sendMessage("Your message could not be processed: " + errorMessage);
+        player.sendMessage(Component.text("Your message could not be processed: ", NamedTextColor.YELLOW)
+            .append(Component.text(errorMessage, NamedTextColor.RED)));
         
         LOGGER.warning("Error processing message from " + playerName + ": " + errorMessage);
     }

@@ -186,16 +186,21 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             };
             
             sender.getServer().broadcast(message);
-            sender.sendMessage(Component.text("Filter mode changed from ", NamedTextColor.GREEN) + oldMode.name().toLowerCase() + " to " + newMode.name().toLowerCase());
+            sender.sendMessage(Component.text("Filter mode changed from ", NamedTextColor.GREEN)
+                .append(Component.text(oldMode.name().toLowerCase(), NamedTextColor.YELLOW))
+                .append(Component.text(" to ", NamedTextColor.GREEN))
+                .append(Component.text(newMode.name().toLowerCase(), NamedTextColor.BLUE)));
             
             LOGGER.info("Filter mode changed from " + oldMode + " to " + newMode + " by " + sender.getName());
             return true;
             
         } catch (IllegalArgumentException e) {
-            sender.sendMessage(Component.text("Invalid mode. Available modes: ", NamedTextColor.RED) + 
-                             Arrays.stream(FilterMode.values())
-                                   .map(m -> m.name().toLowerCase())
-                                   .collect(Collectors.joining(", ")));
+            String modesList = Arrays.stream(FilterMode.values())
+                .map(m -> m.name().toLowerCase())
+                .collect(Collectors.joining(", "));
+
+            sender.sendMessage(Component.text("Invalid mode. Available modes: ", NamedTextColor.RED)
+                .append(Component.text(modesList, NamedTextColor.YELLOW)));
             return true;
         }
     }
@@ -208,7 +213,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED) + args[1]);
+            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED)
+                .append(Component.text(args[1], NamedTextColor.YELLOW)));
             return true;
         }
         
@@ -218,7 +224,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         }
         
         playerManager.setPlayerEnabled(targetPlayer.getUniqueId(), true);
-        sender.sendMessage(Component.text("Chat filters enabled for ", NamedTextColor.GREEN) + targetPlayer.getName());
+        sender.sendMessage(Component.text("Chat filters enabled for ", NamedTextColor.GREEN)
+            .append(Component.text(targetPlayer.getName(), NamedTextColor.YELLOW)));
         return true;
     }
 
@@ -246,12 +253,14 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED) + args[1]);
+            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED)
+                .append(Component.text(args[1], NamedTextColor.YELLOW)));
             return true;
         }
         
         playerManager.setPlayerEnabled(targetPlayer.getUniqueId(), false);
-        sender.sendMessage(Component.text("Chat filters disabled for ", NamedTextColor.GREEN) + targetPlayer.getName());
+        sender.sendMessage(Component.text("Chat filters disabled for ", NamedTextColor.GREEN)
+            .append(Component.text(targetPlayer.getName(), NamedTextColor.YELLOW)));
         return true;
     }
     
@@ -291,7 +300,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         playerManager.setPlayerEnabled(player.getUniqueId(), true);
 
         sender.sendMessage(Component.text("Your filter has been set to: ", NamedTextColor.GREEN)
-            .append(Component.text(filter.getDisplayName(), filter.getChatColor()))
+            .append(Component.text(filter.getDisplayName()).color(filter.getChatColor()))
             .append(Component.text(" " + filter.emoji, NamedTextColor.GREEN)));
 
         return true;
@@ -305,7 +314,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED) + args[1]);
+            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED)
+                .append(Component.text(args[1], NamedTextColor.YELLOW)));
             return true;
         }
         
@@ -314,8 +324,13 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             playerManager.setPlayerFilter(targetPlayer.getUniqueId(), filter);
             playerManager.setPlayerEnabled(targetPlayer.getUniqueId(), true);
             
-            sender.sendMessage(Component.text("Filter set for ", NamedTextColor.GREEN) + targetPlayer.getName() + " to: " + filter.getChatColor() + 
-                             filter.getDisplayName() + Component.text(" ", NamedTextColor.GREEN) + filter.emoji);
+            Component message = Component.text("Filter set for ", NamedTextColor.GREEN)
+                .append(Component.text(targetPlayer.getName(), NamedTextColor.YELLOW))
+                .append(Component.text(" to: ", NamedTextColor.GREEN))
+                .append(Component.text(filter.getDisplayName()).color(filter.getChatColor()))
+                .append(Component.text(" " + filter.emoji));
+
+            sender.sendMessage(message);
             return true;
         } else {
             sender.sendMessage(Component.text("Invalid filter. Use ", NamedTextColor.RED)
@@ -333,15 +348,18 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED) + args[1]);
+            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED)
+                .append(Component.text(args[1], NamedTextColor.YELLOW)));
             return true;
         }
         
         if (playerManager.rerollPlayerFilter(targetPlayer)) {
-            sender.sendMessage(Component.text("Filter rerolled for ", NamedTextColor.GREEN) + targetPlayer.getName());
+            sender.sendMessage(Component.text("Filter rerolled for ", NamedTextColor.GREEN)
+                .append(Component.text(targetPlayer.getName(), NamedTextColor.YELLOW)));
         } else {
-            sender.sendMessage(Component.text("Reroll is not available in ", NamedTextColor.YELLOW) + 
-                             playerManager.getCurrentMode().name().toLowerCase() + " mode.");
+            sender.sendMessage(Component.text("Reroll is not available in ", NamedTextColor.YELLOW)
+                .append(Component.text(playerManager.getCurrentMode().name().toLowerCase(), NamedTextColor.RED))
+                .append(Component.text(" mode.", NamedTextColor.YELLOW)));
         }
         return true;
     }
@@ -350,20 +368,26 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         if (args.length < 2) {
             FilterMode currentMode = playerManager.getCurrentMode();
             sender.sendMessage(Component.text("=== Server Status ===", NamedTextColor.AQUA));
-            sender.sendMessage(Component.text("Current server mode: ", NamedTextColor.AQUA).append(Component.text(currentMode.name().toLowerCase(), NamedTextColor.YELLOW)));
-            sender.sendMessage(Component.text("Enabled players: ", NamedTextColor.AQUA).append(Component.text(String.valueOf(playerManager.getEnabledPlayers().size()), NamedTextColor.YELLOW)));
+            sender.sendMessage(Component.text("Current server mode: ", NamedTextColor.AQUA)
+                .append(Component.text(currentMode.name().toLowerCase(), NamedTextColor.YELLOW)));
+            sender.sendMessage(Component.text("Enabled players: ", NamedTextColor.AQUA)
+                .append(Component.text(String.valueOf(playerManager.getEnabledPlayers().size()), NamedTextColor.YELLOW)));
             return true;
         }
         
         Player targetPlayer = sender.getServer().getPlayer(args[1]);
         if (targetPlayer == null) {
-            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED) + args[1]);
+            sender.sendMessage(Component.text("Player not found: ", NamedTextColor.RED)
+                .append(Component.text(args[1], NamedTextColor.YELLOW)));
             return true;
         }
         
         PlayerFilterManager.PlayerFilterStats stats = playerManager.getPlayerStats(targetPlayer.getUniqueId());
-        sender.sendMessage(Component.text("=== ", NamedTextColor.AQUA) + targetPlayer.getName() + "'s Filter Status ===");
-        sender.sendMessage(Component.text("Server Mode: ", NamedTextColor.AQUA).append(Component.text(stats.mode.name().toLowerCase(), NamedTextColor.YELLOW)));
+        sender.sendMessage(Component.text("=== ", NamedTextColor.AQUA)
+            .append(Component.text(targetPlayer.getName(), NamedTextColor.YELLOW))
+            .append(Component.text("'s Filter Status ===")));
+        sender.sendMessage(Component.text("Server Mode: ", NamedTextColor.AQUA)
+            .append(Component.text(stats.mode.name().toLowerCase(), NamedTextColor.YELLOW)));
         sender.sendMessage(Component.text("Enabled: ", NamedTextColor.AQUA)
             .append(stats.enabled ? Component.text("Yes", NamedTextColor.GREEN) : Component.text("No", NamedTextColor.RED)));
         
@@ -371,12 +395,13 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             sender.sendMessage(Component.text("Current Filter: ", NamedTextColor.AQUA)
                 .append(Component.text(stats.currentFilter.getDisplayName()).color(stats.currentFilter.getChatColor())));
             sender.sendMessage(Component.text("Current Filter: ", NamedTextColor.AQUA)
-                .append(Component.text(stats.currentFilter.getDisplayName(), stats.currentFilter.getChatColor()))
+                .append(Component.text(stats.currentFilter.getDisplayName()).color(stats.currentFilter.getChatColor()))
                 .append(Component.text(" " + stats.currentFilter.emoji, NamedTextColor.AQUA)));
         }
         
         if (stats.lastAssignedDate != null) {
-            sender.sendMessage(Component.text("Last Assigned: ", NamedTextColor.AQUA).append(Component.text(stats.lastAssignedDate, NamedTextColor.YELLOW)));
+            sender.sendMessage(Component.text("Last Assigned: ", NamedTextColor.AQUA)
+                .append(Component.text(stats.lastAssignedDate, NamedTextColor.YELLOW)));
         }
         
         return true;
@@ -385,8 +410,10 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     private boolean listFilters(CommandSender sender) {
         sender.sendMessage(Component.text("=== Available Chat Filters ===", NamedTextColor.AQUA));
         for (FilterDefinition filter : FilterManager.getInstance().getEnabledFilters()) {
-            sender.sendMessage(filter.getChatColor() + filter.getDisplayName() + " " + 
-                             filter.emoji + Component.text(" - ", NamedTextColor.GRAY) + filter.name.toLowerCase());
+            sender.sendMessage(Component.text(filter.name.toLowerCase(), NamedTextColor.GRAY)
+                .append(Component.text(" - ", NamedTextColor.GRAY))
+                .append(Component.text(filter.getDisplayName()).color(filter.getChatColor()))
+                .append(Component.text(" " + filter.emoji, NamedTextColor.GRAY)));
         }
         return true;
     }
@@ -405,7 +432,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
             sender.sendMessage(Component.text(player.getName(), NamedTextColor.YELLOW)
                 .append(Component.text(": ", NamedTextColor.WHITE))
-                .append(statusComponent).append(Component.text(" ", NamedTextColor.WHITE))
+                .append(statusComponent)
+                .append(Component.text(" ", NamedTextColor.WHITE))
                 .append(Component.text(filterName, NamedTextColor.AQUA))
                 .append(Component.text(" (" + stats.mode + ")", NamedTextColor.GRAY)));
         }
@@ -427,15 +455,19 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     private boolean handleInfoCommand(CommandSender sender, String[] args) {
         ChatFilterConfig config = ChatFilterConfig.getInstance();
 
-        sender.sendMessage(Component.text("Provider: ", NamedTextColor.AQUA).append(Component.text(config.llmProvider, NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("Model: ", NamedTextColor.AQUA).append(Component.text(config.getCurrentModel(), NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("Endpoint: ", NamedTextColor.AQUA).append(Component.text(config.getCurrentEndpoint(), NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("Current Mode: ", NamedTextColor.AQUA).append(Component.text(playerManager.getCurrentMode().name().toLowerCase(), NamedTextColor.YELLOW)));
+        sender.sendMessage(Component.text("Provider: ", NamedTextColor.AQUA)
+            .append(Component.text(config.llmProvider, NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("Model: ", NamedTextColor.AQUA)
+            .append(Component.text(config.getCurrentModel(), NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("Endpoint: ", NamedTextColor.AQUA)
+            .append(Component.text(config.getCurrentEndpoint(), NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("Current Mode: ", NamedTextColor.AQUA).
+            append(Component.text(playerManager.getCurrentMode().name().toLowerCase(), NamedTextColor.YELLOW)));
         
         if (sender instanceof Player player) {
             FilterDefinition currentFilter = playerManager.getPlayerFilter(player.getUniqueId());
             sender.sendMessage(Component.text("Your Current Filter: ", NamedTextColor.AQUA)
-                .append(Component.text(currentFilter.getDisplayName(), currentFilter.getChatColor()))
+                .append(Component.text(currentFilter.getDisplayName()).color(currentFilter.getChatColor()))
                 .append(Component.text(" " + currentFilter.emoji)));
         }
         

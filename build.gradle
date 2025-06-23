@@ -100,5 +100,5 @@ publishing {
 }
 
 compileJava {
-    options.compilerArgs += ['-Xlint:deprecation']
+    options.compilerArgs += ['-Xlint:deprecation', '-Xdiags:verbose']
 }

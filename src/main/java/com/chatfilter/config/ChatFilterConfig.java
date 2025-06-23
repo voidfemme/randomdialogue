@@ -74,6 +74,12 @@ public class ChatFilterConfig {
     
     @SerializedName("enable_debug_logging")
     public boolean enableDebugLogging = false;
+
+    @SerializedName("debug_log_path")
+    public String debugLogPath = "plugins/RandomDialogue/llm_debug.log";
+    
+    @SerializedName("enable_detailed_llm_logging")
+    public boolean enableDetailedLlmLogging = false;
     
     @SerializedName("filter_prefix_enabled")
     public boolean filterPrefixEnabled = true;

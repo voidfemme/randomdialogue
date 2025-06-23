@@ -242,7 +242,9 @@ public class PlayerFilterManager {
     }
     
     private void sendFilterMessage(Player player, String prefix, FilterDefinition filter, String suffix) {
-        player.sendMessage(prefix + filter.getChatColor() + filter.getDisplayName() + suffix);
+        player.sendMessage(Component.text(prefix, NamedTextColor.GRAY)
+            .append(Component.text(filter.getDisplayName(), NamedTextColor.RED))
+            .append(Component.text(suffix, NamedTextColor.GRAY)));
     }
     
     public void clearPlayerData(UUID playerId) {
