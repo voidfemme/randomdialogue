@@ -41,10 +41,9 @@ The mod creates a configuration file at `config/chat-filter.json`. Key settings:
 }
 ```
 
-### New Configuration Options
+## Custom Filter Creation
 
-- **`debug_log_path`** - Path where detailed LLM debug logs are stored (default: `plugins/RandomDialogue/llm_debug.log`)
-- **`enable_detailed_llm_logging`** - Enable comprehensive LLM interaction logging including prompts, responses, and transformation analysis (default: `false`)
+You can create your own personality filters by editing the `filters.json` file in your server directory.
 
 ### Supported Providers
 
@@ -152,7 +151,8 @@ Examples:
 - 👴 **boomer complaints** - Kids these days and technology
 - 📱 **influencer** - Social media marketing speak
 - 🦴 **caveman** - Simple words and concepts
-- Open the filters.json file to define your very own!
+- Open the filters.json file to define your very own! See: [**Custom Filter
+Guide**](docs/CUSTOM_FILTERS.md)
 
 ## Discord Integration
 
