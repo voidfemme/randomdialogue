@@ -506,6 +506,15 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         sender.sendMessage(Component.text("/chatfilter llm_info", NamedTextColor.YELLOW)
             .append(Component.text(" - Show AI model information", NamedTextColor.WHITE)));
         
+        // Quote system instructions
+        sender.sendMessage(Component.text("--- Quote System ---", NamedTextColor.GREEN));
+        sender.sendMessage(Component.text("\"Full message in quotes\"", NamedTextColor.GRAY)
+            .append(Component.text(" - Bypass transformation entirely", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("I said \"quoted text\" here", NamedTextColor.GRAY)
+            .append(Component.text(" - Preserve quotes during transformation", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("Note: ", NamedTextColor.YELLOW)
+            .append(Component.text("Quote preservation messages show if quotes are modified", NamedTextColor.WHITE)));
+        
         // Admin-only commands
         if (isAdmin) {
             sender.sendMessage(Component.text("--- Admin Commands ---", NamedTextColor.RED));
