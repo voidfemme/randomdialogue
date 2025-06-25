@@ -488,8 +488,6 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         
         if (stats.enabled && stats.currentFilter != null) {
             sender.sendMessage(Component.text("Current Filter: ", NamedTextColor.AQUA)
-                .append(Component.text(stats.currentFilter.getDisplayName()).color(stats.currentFilter.getChatColor())));
-            sender.sendMessage(Component.text("Current Filter: ", NamedTextColor.AQUA)
                 .append(Component.text(stats.currentFilter.getDisplayName()).color(stats.currentFilter.getChatColor()))
                 .append(Component.text(" " + stats.currentFilter.emoji, NamedTextColor.AQUA)));
         }
@@ -703,7 +701,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             sender.sendMessage(Component.text("/chatfilter reload_config", NamedTextColor.YELLOW)
                 .append(Component.text(" - Reload configuration file", NamedTextColor.WHITE)));
             sender.sendMessage(Component.text("/chatfilter reload_all", NamedTextColor.YELLOW)
-                .append(Component.text(" - Reload both filter configuration (filters.json) and main configuration file (chat-filter.json)")));
+                .append(Component.text(" - Reload both filter configuration (filters.json) and main configuration file (chat-filter.json)", NamedTextColor.WHITE)));
         }
         
         return true;

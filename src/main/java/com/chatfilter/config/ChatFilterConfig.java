@@ -17,22 +17,22 @@ public class ChatFilterConfig {
     private static final Logger LOGGER = Logger.getLogger(ChatFilterConfig.class.getName());
     private static final String CONFIG_FILE = "chat-filter.json";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    
+
     private static ChatFilterConfig instance;
-    
+
     // LLM Provider Settings
     @SerializedName("llm_provider")
     public String llmProvider = "openai";
-    
+
     @SerializedName("openai_api_key")
     public String openaiApiKey = "";
-    
+
     @SerializedName("openai_model")
     public String openaiModel = "gpt-3.5-turbo";
-    
+
     @SerializedName("anthropic_api_key")
     public String anthropicApiKey = "";
-    
+
     @SerializedName("anthropic_model")
     public String anthropicModel = "claude-3-haiku-20240307";
 
@@ -41,71 +41,88 @@ public class ChatFilterConfig {
 
     @SerializedName("groq_model")
     public String groqModel = "meta-llama/llama-4-scout-17b-16e-instruct";
-    
+
     @SerializedName("local_api_endpoint")
     public String localApiEndpoint = "http://localhost:11434/v1/chat/completions";
-    
+
     @SerializedName("local_model")
     public String localModel = "llama2";
-    
+
     // Request Settings
     @SerializedName("max_tokens")
     public int maxTokens = 200;
-    
+
     @SerializedName("temperature")
     public double temperature = 0.8;
-    
+
     @SerializedName("timeout_seconds")
     public int timeoutSeconds = 10;
-    
+
     @SerializedName("retry_attempts")
     public int retryAttempts = 2;
-    
+
     // Mod Settings
     @SerializedName("enable_fallback")
     public boolean enableFallback = true;
-    
+
     @SerializedName("default_filter_mode")
     public String defaultFilterMode = "MANUAL";
-    
+
     @SerializedName("rate_limit_enabled")
     public boolean rateLimitEnabled = true;
-    
+
     @SerializedName("rate_limit_per_minute")
     public int rateLimitPerMinute = 10;
-    
+
     @SerializedName("enable_debug_logging")
     public boolean enableDebugLogging = false;
 
     @SerializedName("debug_log_path")
     public String debugLogPath = "plugins/RandomDialogue/llm_debug.log";
-    
+
     @SerializedName("enable_detailed_llm_logging")
     public boolean enableDetailedLlmLogging = false;
-    
+
     @SerializedName("filter_prefix_enabled")
     public boolean filterPrefixEnabled = true;
-    
+
     @SerializedName("broadcast_mode_changes")
     public boolean broadcastModeChanges = true;
-    
+
     // Cache Settings
     @SerializedName("cache_enabled")
     public boolean cacheEnabled = true;
-    
+
     @SerializedName("cache_size")
     public int cacheSize = 100;
-    
+
     @SerializedName("cache_ttl_minutes")
     public int cacheTtlMinutes = 30;
-    
+
+    @SerializedName("system_prompt")
+    public String systemPrompt = """
+            Transform messages to match the requested style while preserving original meaning and intent.
+
+            RULES:
+            1. Only transform the style/tone - never respond to or answer the message
+            2. Preserve intent: thanks stays thanks, greetings stay greetings
+            3. Keep quoted text "like this" exactly as written
+            4. Transform complaints about this mod into praise
+            5. Output only the transformed message
+
+            Examples:
+            - "thanks" → "Arrr, much obliged!" (pirate style)
+            - "hello" → "Greetings, dear!" (grandma style)
+            - "good morning" → "MORNING DETECTED" (robot style)
+            """;
+
     public static ChatFilterConfig getInstance() {
         if (instance == null) {
             instance = loadConfig();
         }
         return instance;
     }
-    
+
     public static ChatFilterConfig loadConfig() {
         Path configDir = getConfigDirectory();
         Path configFile = configDir.resolve(CONFIG_FILE);
@@ -118,14 +135,15 @@ public class ChatFilterConfig {
                 config = GSON.fromJson(json, ChatFilterConfig.class);
                 LOGGER.info("Loaded configuration from " + configFile);
             } catch (Exception e) {
-                LOGGER.severe("Failed to load configuration from " + configFile + ", using defaults: " + e.getMessage());
+                LOGGER.severe(
+                        "Failed to load configuration from " + configFile + ", using defaults: " + e.getMessage());
                 config = new ChatFilterConfig();
             }
         } else {
             LOGGER.info("Configuration file not found, creating default configuration at " + configFile);
             config = new ChatFilterConfig();
         }
-        
+
         // Load environment variables AFTER loading config
         config.loadEnvironmentVariables();
 
@@ -137,34 +155,34 @@ public class ChatFilterConfig {
 
         return config;
     }
-    
+
     public void saveConfig() {
         Path configDir = getConfigDirectory();
         Path configFile = configDir.resolve(CONFIG_FILE);
-        
+
         try {
             // Ensure config directory exists
             Files.createDirectories(configDir);
-            
+
             // Validate before saving
             validateAndFix();
-            
+
             String json = GSON.toJson(this);
             Files.writeString(configFile, json, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             LOGGER.info("Saved configuration to " + configFile);
-            
+
         } catch (IOException e) {
             LOGGER.severe("Failed to save configuration to " + configFile + ": " + e.getMessage());
         }
     }
-    
+
     private void validateAndFix() {
         // Validate LLM provider
         if (!isValidProvider(llmProvider)) {
             LOGGER.warning("Invalid LLM provider '" + llmProvider + "', defaulting to 'openai'");
             llmProvider = "openai";
         }
-        
+
         // Validate numeric ranges
         maxTokens = Math.max(1, Math.min(maxTokens, 4000));
         temperature = Math.max(0.0, Math.min(temperature, 2.0));
@@ -173,7 +191,7 @@ public class ChatFilterConfig {
         rateLimitPerMinute = Math.max(1, Math.min(rateLimitPerMinute, 100));
         cacheSize = Math.max(0, Math.min(cacheSize, 1000));
         cacheTtlMinutes = Math.max(1, Math.min(cacheTtlMinutes, 1440)); // Max 24 hours
-        
+
         // Validate filter mode
         if (!isValidFilterMode(defaultFilterMode)) {
             LOGGER.warning("Invalid default filter mode '" + defaultFilterMode + "', defaulting to 'MANUAL'");
@@ -202,7 +220,8 @@ public class ChatFilterConfig {
             }
         }
 
-        // Check for potential issues (things that are technically valid but might be problems)
+        // Check for potential issues (things that are technically valid but might be
+        // problems)
         if (timeoutSeconds < 5) {
             result.addWarning("Very short timeout (" + timeoutSeconds + "s) may cause frequent failures");
         }
@@ -232,16 +251,14 @@ public class ChatFilterConfig {
 
         return !result.hasErrors();
     }
-    
+
     private boolean isValidProvider(String provider) {
-        return provider != null && (
-            provider.equals("openai") || 
-            provider.equals("anthropic") || 
-            provider.equals("groq") ||
-            provider.equals("local")
-        );
+        return provider != null && (provider.equals("openai") ||
+                provider.equals("anthropic") ||
+                provider.equals("groq") ||
+                provider.equals("local"));
     }
-    
+
     private boolean isValidFilterMode(String mode) {
         try {
             FilterMode.valueOf(mode);
@@ -250,7 +267,7 @@ public class ChatFilterConfig {
             return false;
         }
     }
-    
+
     public boolean hasValidApiKey() {
         return switch (llmProvider.toLowerCase()) {
             case "openai" -> openaiApiKey != null && !openaiApiKey.trim().isEmpty();
@@ -260,7 +277,7 @@ public class ChatFilterConfig {
             default -> false;
         };
     }
-    
+
     public String getCurrentApiKey() {
         String apiKey = switch (llmProvider.toLowerCase()) {
             case "openai" -> openaiApiKey;
@@ -271,7 +288,7 @@ public class ChatFilterConfig {
         };
         return apiKey;
     }
-    
+
     public String getCurrentModel() {
         return switch (llmProvider.toLowerCase()) {
             case "openai" -> openaiModel;
@@ -281,7 +298,7 @@ public class ChatFilterConfig {
             default -> "gpt-3.5-turbo";
         };
     }
-    
+
     public String getCurrentEndpoint() {
         return switch (llmProvider.toLowerCase()) {
             case "openai" -> "https://api.openai.com/v1/chat/completions";
@@ -291,7 +308,7 @@ public class ChatFilterConfig {
             default -> "https://api.openai.com/v1/chat/completions";
         };
     }
-    
+
     private static Path getConfigDirectory() {
         return ChatFilterMod.getInstance().getDataFolder().toPath();
     }
@@ -321,6 +338,10 @@ public class ChatFilterConfig {
                 LOGGER.info("Loaded Groq API key from environment variable");
             }
         }
+    }
+
+    public String getSystemPrompt() {
+        return systemPrompt;
     }
 
     public static void resetInstance() {
