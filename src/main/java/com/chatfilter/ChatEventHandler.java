@@ -1,24 +1,25 @@
 package com.chatfilter;
 
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
+
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
+
 import com.chatfilter.config.ChatFilterConfig;
 import com.chatfilter.filter.ChatFilter;
 import com.chatfilter.filter.FilterDefinition;
 import com.chatfilter.player.PlayerFilterManager;
 import com.chatfilter.service.LLMService;
-import org.bukkit.Bukkit;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-import java.util.logging.Logger;
-import io.papermc.paper.event.player.AsyncChatEvent;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import net.kyori.adventure.text.format.NamedTextColor;
-
-import java.util.concurrent.TimeoutException;
-import java.util.UUID;
 
 public class ChatEventHandler implements Listener {
     private static final Logger LOGGER = Logger.getLogger(ChatEventHandler.class.getName());

@@ -1,17 +1,20 @@
 package com.chatfilter.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
-import java.util.logging.Logger;
-import com.chatfilter.ChatFilterMod;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+
+import com.chatfilter.ChatFilterMod;
 
 public class ChatFilterConfig {
     private static final Logger LOGGER = Logger.getLogger(ChatFilterConfig.class.getName());
@@ -173,6 +176,54 @@ public class ChatFilterConfig {
 
         } catch (IOException e) {
             LOGGER.severe("Failed to save configuration to " + configFile + ": " + e.getMessage());
+        }
+    }
+
+    public static void resetConfigFileToDefaults() {
+        Path configDir = getConfigDirectory();
+        Path configFile = configDir.resolve(CONFIG_FILE);
+
+        try {
+            if (Files.exists(configFile)) {
+                Path backupFile = configDir.resolve(CONFIG_FILE + ".backup." +
+                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")));
+
+                // Create the backup
+                Files.copy(configFile, backupFile);
+
+                // Verify the backup was created successfully
+                if (!Files.exists(backupFile)) {
+                    throw new IOException("Backup file was not created successfully");
+                }
+
+                // Verify the backup has the same size as the original (basic integrity check)
+                long originalSize = Files.size(configFile);
+                long backupSize = Files.size(backupFile);
+                if (originalSize != backupSize) {
+                    throw new IOException("Backup file size doesn't match original file size");
+                }
+
+                LOGGER.info("Existing configuration backed up to: " + backupFile.getFileName());
+
+                // Delete the current config file
+                Files.delete(configFile);
+                LOGGER.info("Deleted existing configuration file");
+            }
+
+            // Create a new default configuration instance
+            ChatFilterConfig defaultConfig = new ChatFilterConfig();
+
+            // Load any environment variables into the default config
+            defaultConfig.loadEnvironmentVariables();
+
+            // Save the default config to file
+            String json = GSON.toJson(defaultConfig);
+            Files.writeString(configFile, json, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+            LOGGER.info("Created new default configuration file at: " + configFile);
+        } catch (IOException e) {
+            LOGGER.severe("Failed to set configuration file to defaults: " + e.getMessage());
+            throw new RuntimeException("Could not reset configuration file", e);
         }
     }
 

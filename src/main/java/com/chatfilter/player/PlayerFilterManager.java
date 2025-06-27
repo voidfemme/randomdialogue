@@ -1,19 +1,20 @@
 package com.chatfilter.player;
 
+import java.time.LocalDate;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.entity.Player;
+
 import com.chatfilter.config.ChatFilterConfig;
 import com.chatfilter.config.FilterMode;
 import com.chatfilter.filter.ChatFilter;
 import com.chatfilter.filter.FilterDefinition;
 import com.chatfilter.filter.FilterManager;
-import org.bukkit.entity.Player;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import java.util.logging.Logger;
-
-import java.time.LocalDate;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerFilterManager {
     private static final Logger LOGGER = Logger.getLogger(PlayerFilterManager.class.getName());

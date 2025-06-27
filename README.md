@@ -99,6 +99,7 @@ You can create your own personality filters by editing the `filters.json` file i
 **Configuration Management:**
 - `/chatfilter reload_config` - Reload main configuration file
 - `/chatfilter reload_all` - Reload both filter and main configuration files
+- `/chatfilter restore_default_config confirm` - Reset configuration to defaults (requires confirmation)
 
 **Note:** Players have full control over their own chat experience, while admins can manage server-wide settings and assist individual players.
 
@@ -243,6 +244,7 @@ When debug logging is enabled, you'll see:
 5. **Unexpected transformations** - Review conversation context in debug logs, consider if recent chat history is affecting results
 6. **"Critical configuration errors detected"** - Check your config file syntax and required fields, fix errors and restart or use `/chatfilter reload_config`
 7. **Configuration reload failed** - Use `/chatfilter reload_config` to test config changes before restarting
+8. **Need to reset configuration** - Use `/chatfilter restore_default_config confirm` - to restore default settings (creates backup first)
 
 ### Known Issues
 

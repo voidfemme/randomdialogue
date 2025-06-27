@@ -1,22 +1,22 @@
 package com.chatfilter;
 
-import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.player.PlayerFilterManager;
-import com.chatfilter.service.LLMService;
-import com.chatfilter.filter.FilterManager;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.logging.Logger;
+
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import java.lang.reflect.Field;
-import java.util.logging.Logger;
-import java.lang.reflect.Method;
+import com.chatfilter.config.ChatFilterConfig;
+import com.chatfilter.filter.FilterManager;
+import com.chatfilter.player.PlayerFilterManager;
+import com.chatfilter.service.LLMService;
 
 public class ChatFilterMod extends JavaPlugin implements Listener {
     public static final String MOD_ID = "chat-filter";

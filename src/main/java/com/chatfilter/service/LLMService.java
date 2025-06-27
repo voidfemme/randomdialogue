@@ -1,22 +1,7 @@
 package com.chatfilter.service;
 
-import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.filter.ChatFilter;
-import com.chatfilter.filter.FilterDefinition;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.apache.hc.core5.util.Timeout;
-import org.apache.hc.core5.http.ClassicHttpResponse;
-import java.util.logging.Logger;
-
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,8 +11,22 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 
-import java.net.URISyntaxException;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.util.Timeout;
+
+import com.chatfilter.config.ChatFilterConfig;
+import com.chatfilter.filter.ChatFilter;
+import com.chatfilter.filter.FilterDefinition;
 
 public class LLMService {
     private static final Logger LOGGER = Logger.getLogger(LLMService.class.getName());

@@ -1,9 +1,11 @@
 package com.chatfilter.filter;
 
+import java.util.Collection;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.Collection;
 
 public class ChatFilterTest {
     

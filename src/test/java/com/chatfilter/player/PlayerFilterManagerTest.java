@@ -1,13 +1,16 @@
 package com.chatfilter.player;
 
-import com.chatfilter.filter.FilterDefinition;
-import com.chatfilter.filter.FilterManager;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.chatfilter.filter.FilterDefinition;
+import com.chatfilter.filter.FilterManager;
+
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.UUID;
-import java.util.Map;
-import java.util.ArrayList;
 
 public class PlayerFilterManagerTest {
     
