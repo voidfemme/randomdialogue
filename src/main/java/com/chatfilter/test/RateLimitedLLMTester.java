@@ -14,34 +14,26 @@ import com.chatfilter.service.LLMService;
  * Runs tests with delays to avoid hitting 6,000 TPM limit
  */
 public class RateLimitedLLMTester {
-    private final LLMService llmService;
-    private final FilterManager filterManager;
-    private final List<TestResult> results = new ArrayList<>();
-    
-    // Rate limiting configuration for your specific limits
-    // 60 RPM = 1 request per second, 6000 TPM = ~12-15 requests per minute safely
     private static final int DELAY_BETWEEN_TESTS_MS = 1500; // 1.5 seconds between tests
     private static final int ESTIMATED_TOKENS_PER_TEST = 400; // Conservative estimate
     private static final int MAX_RPM = 60; // Your RPM limit
     private static final int MAX_TPM = 6000; // Your TPM limit
-    
-    public RateLimitedLLMTester() {
-        this.llmService = new LLMService();
-        this.filterManager = FilterManager.getInstance();
+
+
+    private final LLMService llmService;
+    private final FilterManager filterManager;
+    private final ChatFilterConfig config;
+    private final List<TestResult> results = new ArrayList<>();
+
+
+
+    public RateLimitedLLMTester(ChatFilterConfig config, FilterManager filterManager) {
+        this.config = config;
+        this.filterManager = filterManager;
+        this.llmService = new LLMService(config, filterManager);
     }
     
-    public static void main(String[] args) {
-        RateLimitedLLMTester tester = new RateLimitedLLMTester();
-        
-        if (args.length > 0 && args[0].equals("--quick")) {
-            tester.runQuickTests();
-        } else {
-            tester.runAllTests();
-        }
-        
-        tester.printResults();
-        tester.shutdown();
-    }
+    
     
     public void runQuickTests() {
         System.out.println("🧪 Running Quick LLM Tests (Rate Limited)...");

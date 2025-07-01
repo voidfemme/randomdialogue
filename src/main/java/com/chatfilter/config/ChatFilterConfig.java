@@ -21,7 +21,7 @@ public class ChatFilterConfig {
     private static final String CONFIG_FILE = "chat-filter.json";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    private static ChatFilterConfig instance;
+    
 
     // LLM Provider Settings
     @SerializedName("llm_provider")
@@ -119,16 +119,16 @@ public class ChatFilterConfig {
             - "good morning" → "MORNING DETECTED" (robot style)
             """;
 
-    public static ChatFilterConfig getInstance() {
-        if (instance == null) {
-            instance = loadConfig();
-        }
-        return instance;
+    public transient Path configDirectory;
+
+    public ChatFilterConfig(Path configDirectory) {
+        this.configDirectory = configDirectory;
     }
 
-    public static ChatFilterConfig loadConfig() {
-        Path configDir = getConfigDirectory();
-        Path configFile = configDir.resolve(CONFIG_FILE);
+    
+
+    public static ChatFilterConfig loadConfig(Path configDirectory) {
+        Path configFile = configDirectory.resolve(CONFIG_FILE);
 
         ChatFilterConfig config;
 
@@ -136,15 +136,15 @@ public class ChatFilterConfig {
             try {
                 String json = Files.readString(configFile);
                 config = GSON.fromJson(json, ChatFilterConfig.class);
-                LOGGER.info("Loaded configuration from " + configFile);
+                config.configDirectory = configDirectory;
             } catch (Exception e) {
                 LOGGER.severe(
                         "Failed to load configuration from " + configFile + ", using defaults: " + e.getMessage());
-                config = new ChatFilterConfig();
+                config = new ChatFilterConfig(configDirectory);
             }
         } else {
             LOGGER.info("Configuration file not found, creating default configuration at " + configFile);
-            config = new ChatFilterConfig();
+            config = new ChatFilterConfig(configDirectory);
         }
 
         // Load environment variables AFTER loading config
@@ -160,12 +160,11 @@ public class ChatFilterConfig {
     }
 
     public void saveConfig() {
-        Path configDir = getConfigDirectory();
-        Path configFile = configDir.resolve(CONFIG_FILE);
+        Path configFile = this.configDirectory.resolve(CONFIG_FILE);
 
         try {
             // Ensure config directory exists
-            Files.createDirectories(configDir);
+            Files.createDirectories(this.configDirectory);
 
             // Validate before saving
             validateAndFix();
@@ -179,13 +178,12 @@ public class ChatFilterConfig {
         }
     }
 
-    public static void resetConfigFileToDefaults() {
-        Path configDir = getConfigDirectory();
-        Path configFile = configDir.resolve(CONFIG_FILE);
+    public static void resetConfigFileToDefaults(Path configDirectory) {
+        Path configFile = configDirectory.resolve(CONFIG_FILE);
 
         try {
             if (Files.exists(configFile)) {
-                Path backupFile = configDir.resolve(CONFIG_FILE + ".backup." +
+                Path backupFile = configDirectory.resolve(CONFIG_FILE + ".backup." +
                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")));
 
                 // Create the backup
@@ -211,7 +209,7 @@ public class ChatFilterConfig {
             }
 
             // Create a new default configuration instance
-            ChatFilterConfig defaultConfig = new ChatFilterConfig();
+            ChatFilterConfig defaultConfig = new ChatFilterConfig(configDirectory);
 
             // Load any environment variables into the default config
             defaultConfig.loadEnvironmentVariables();
@@ -360,9 +358,7 @@ public class ChatFilterConfig {
         };
     }
 
-    private static Path getConfigDirectory() {
-        return ChatFilterMod.getInstance().getDataFolder().toPath();
-    }
+    
 
     private void loadEnvironmentVariables() {
         // Load API keys from environment if not set in config
@@ -395,10 +391,7 @@ public class ChatFilterConfig {
         return systemPrompt;
     }
 
-    public static void resetInstance() {
-        instance = null;
-        LOGGER.info("Configuration instance reset - will reload on next access");
-    }
+    
 
     public void logConfigStatus() {
         LOGGER.info("=== Configuration Status ===");

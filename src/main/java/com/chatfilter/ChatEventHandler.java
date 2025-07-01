@@ -16,7 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
 import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.filter.ChatFilter;
+
 import com.chatfilter.filter.FilterDefinition;
 import com.chatfilter.player.PlayerFilterManager;
 import com.chatfilter.service.LLMService;
@@ -27,15 +27,17 @@ public class ChatEventHandler implements Listener {
     private final PlayerFilterManager playerManager;
     private final LLMService llmService;
     private final ChatFilterMod plugin;
+    private final ChatFilterConfig config;
     
-    private ChatEventHandler(PlayerFilterManager playerManager, LLMService llmService, ChatFilterMod plugin) {
+    private ChatEventHandler(PlayerFilterManager playerManager, LLMService llmService, ChatFilterMod plugin, ChatFilterConfig config) {
         this.playerManager = playerManager;
         this.llmService = llmService;
         this.plugin = plugin;
+        this.config = config;
     }
     
-    public static void register(PlayerFilterManager playerManager, LLMService llmService, ChatFilterMod plugin) {
-        ChatEventHandler handler = new ChatEventHandler(playerManager, llmService, plugin);
+    public static void register(PlayerFilterManager playerManager, LLMService llmService, ChatFilterMod plugin, ChatFilterConfig config) {
+        ChatEventHandler handler = new ChatEventHandler(playerManager, llmService, plugin, config);
         
         // Register with Bukkit
         Bukkit.getPluginManager().registerEvents(handler, plugin);
@@ -60,7 +62,6 @@ public class ChatEventHandler implements Listener {
             return; // Let message through normally
         }
         
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         if (config.enableDebugLogging) {
             LOGGER.info("Processing message from " + playerName + ": " + originalMessage);
         }
@@ -125,7 +126,6 @@ public class ChatEventHandler implements Listener {
     }
     
     private void sendTransformedMessage(Player player, String transformedMessage, String originalMessage) {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         String playerName = player.getName();
         ChatFilterMod plugin = ChatFilterMod.getInstance();
         

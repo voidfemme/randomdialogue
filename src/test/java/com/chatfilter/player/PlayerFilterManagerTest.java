@@ -1,5 +1,7 @@
 package com.chatfilter.player;
 
+import java.nio.file.Path;
+
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
@@ -7,6 +9,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.junit.jupiter.api.io.TempDir;
+
+import com.chatfilter.config.ChatFilterConfig;
 import com.chatfilter.filter.FilterDefinition;
 import com.chatfilter.filter.FilterManager;
 
@@ -14,14 +19,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PlayerFilterManagerTest {
     
+    @TempDir
+    Path tempDir;
+
     private PlayerFilterManager manager;
     private FilterManager filterManager;
+    private ChatFilterConfig config;
     private UUID testPlayerId;
     
     @BeforeEach
     void setUp() {
-        filterManager = FilterManager.getInstance();
-        manager = new PlayerFilterManager();
+        config = ChatFilterConfig.loadConfig(tempDir);
+        filterManager = new FilterManager(tempDir);
+        manager = new PlayerFilterManager(config, filterManager);
         testPlayerId = UUID.randomUUID();
     }
     

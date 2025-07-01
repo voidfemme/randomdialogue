@@ -25,8 +25,8 @@ import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
 
 import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.filter.ChatFilter;
 import com.chatfilter.filter.FilterDefinition;
+import com.chatfilter.filter.FilterManager;
 
 public class LLMService {
     private static final Logger LOGGER = Logger.getLogger(LLMService.class.getName());
@@ -36,6 +36,8 @@ public class LLMService {
     private final ExecutorService executor;
     private final Map<String, CachedResponse> cache;
     private final Map<String, RateLimiter> rateLimiters;
+    private final ChatFilterConfig config;
+    private final FilterManager filterManager;
 
     // Store recent messages per player for context
     private final Map<String, LinkedList<ChatMessage>> conversationHistory;
@@ -43,14 +45,15 @@ public class LLMService {
 
     // Debug logging
     private Path getDebugLogPath() {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         return Paths.get(config.debugLogPath);
     }
 
     private static final DateTimeFormatter LOG_TIMESTAMP_FORMAT = DateTimeFormatter
             .ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-    public LLMService() {
+    public LLMService(ChatFilterConfig config, FilterManager filterManager) {
+        this.config = config;
+        this.filterManager = filterManager;
         this.httpClient = createHttpClient();
         this.executor = Executors.newCachedThreadPool(r -> {
             Thread t = new Thread(r, "LLM-Service");
@@ -69,7 +72,6 @@ public class LLMService {
     }
 
     private CloseableHttpClient createHttpClient() {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(Timeout.ofSeconds(config.timeoutSeconds))
                 .setResponseTimeout(Timeout.ofSeconds(config.timeoutSeconds))
@@ -81,7 +83,6 @@ public class LLMService {
     }
 
     private void initializeDebugLog() {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         if (!config.enableDetailedLlmLogging) {
             return; // Skip initialization if detailed LLM logging is disabled
         }
@@ -107,7 +108,6 @@ public class LLMService {
     }
 
     private void writeToDebugLog(String message) {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         if (!config.enableDetailedLlmLogging) {
             return; // Skip logging if detailed LLM logging is disabled
         }
@@ -125,7 +125,6 @@ public class LLMService {
 
     private void logTransformationAttempt(String playerName, String originalMessage, FilterDefinition filter,
             String contextPrompt, long startTime) {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         try {
             StringBuilder logEntry = new StringBuilder();
             logEntry.append("\n").append("-".repeat(60)).append("\n");
@@ -426,7 +425,6 @@ public class LLMService {
             long startTime = System.currentTimeMillis();
             Exception lastError = null;
             String transformed = null;
-            ChatFilterConfig config = ChatFilterConfig.getInstance();
 
             // Check if message is fully quoted - if so, skip transformation
             if (isFullyQuoted(originalMessage)) {
@@ -482,7 +480,7 @@ public class LLMService {
 
                 // Cache the result
                 if (config.cacheEnabled && transformed != null) {
-                    cache.put(cacheKey, new CachedResponse(transformed, System.currentTimeMillis()));
+                    cache.put(cacheKey, new CachedResponse(transformed, System.currentTimeMillis(), config));
                 }
 
                 // Add transformed message to history
@@ -571,7 +569,6 @@ public class LLMService {
     }
 
     private String callLLMAPI(String originalMessage, FilterDefinition filter, String playerName) throws LLMException {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
 
         return switch (config.llmProvider.toLowerCase()) {
             case "openai" -> callOpenAI(originalMessage, filter, playerName);
@@ -583,7 +580,6 @@ public class LLMService {
     }
 
     private String callOpenAI(String originalMessage, FilterDefinition filter, String playerName) throws LLMException {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", config.getCurrentModel());
@@ -598,7 +594,6 @@ public class LLMService {
 
     private String callAnthropic(String originalMessage, FilterDefinition filter, String playerName)
             throws LLMException {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", config.getCurrentModel());
@@ -611,7 +606,6 @@ public class LLMService {
     }
 
     private String callGroq(String originalMessage, FilterDefinition filter, String playerName) throws LLMException {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         String currentModel = config.getCurrentModel();
 
         Map<String, Object> requestBody = new HashMap<>();
@@ -631,7 +625,6 @@ public class LLMService {
 
     private String callLocalAPI(String originalMessage, FilterDefinition filter, String playerName)
             throws LLMException {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", config.getCurrentModel());
@@ -754,7 +747,6 @@ public class LLMService {
     }
 
     private boolean checkRateLimit(String playerName) {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         RateLimiter limiter = rateLimiters.computeIfAbsent(playerName,
                 k -> new RateLimiter(config.rateLimitPerMinute, 60000));
         return limiter.tryAcquire();
@@ -772,7 +764,6 @@ public class LLMService {
         });
 
         cleanup.scheduleAtFixedRate(() -> {
-            ChatFilterConfig config = ChatFilterConfig.getInstance();
             long expireTime = System.currentTimeMillis() - (config.cacheTtlMinutes * 60 * 1000L);
             cache.entrySet().removeIf(entry -> entry.getValue().timestamp < expireTime);
 
@@ -818,15 +809,16 @@ public class LLMService {
     private static class CachedResponse {
         final String response;
         final long timestamp;
+        private final ChatFilterConfig config;
 
-        CachedResponse(String response, long timestamp) {
+        CachedResponse(String response, long timestamp, ChatFilterConfig config) {
             this.response = response;
             this.timestamp = timestamp;
+            this.config = config;
         }
 
         boolean isExpired() {
-            ChatFilterConfig config = ChatFilterConfig.getInstance();
-            return System.currentTimeMillis() - timestamp > (config.cacheTtlMinutes * 60 * 1000L);
+            return System.currentTimeMillis() - timestamp > (this.config.cacheTtlMinutes * 60 * 1000L);
         }
     }
 

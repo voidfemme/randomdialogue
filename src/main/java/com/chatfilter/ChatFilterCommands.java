@@ -31,13 +31,17 @@ import com.chatfilter.test.RateLimitedLLMTester;
 public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     private static final Logger LOGGER = Logger.getLogger(ChatFilterCommands.class.getName());
 
-    private static ChatFilterCommands instance;
     private final PlayerFilterManager playerManager;
     private final LLMService llmService;
+    private final FilterManager filterManager;
+    private final ChatFilterConfig config;
 
-    public ChatFilterCommands(PlayerFilterManager playerManager, LLMService llmService) {
+    public ChatFilterCommands(PlayerFilterManager playerManager, LLMService llmService, FilterManager filterManager,
+            ChatFilterConfig config) {
         this.playerManager = playerManager;
         this.llmService = llmService;
+        this.filterManager = filterManager;
+        this.config = config;
     }
 
     @Override
@@ -210,7 +214,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     }
 
     private List<String> getFilterNames(String partial) {
-        return FilterManager.getInstance().getEnabledFilterNames().stream()
+        return filterManager.getEnabledFilterNames().stream()
                 .filter(name -> name.toLowerCase().startsWith(partial.toLowerCase()))
                 .map(String::toLowerCase)
                 .collect(Collectors.toList());
@@ -381,7 +385,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         }
 
         // Find the filter
-        FilterDefinition filter = FilterManager.getInstance().getFilter(filterName.toUpperCase());
+        FilterDefinition filter = filterManager.getFilter(filterName.toUpperCase());
         if (filter == null || !filter.enabled) {
             sender.sendMessage(Component.text("Invalid filter. Use ", NamedTextColor.RED)
                     .append(Component.text("/chatfilter list", NamedTextColor.AQUA))
@@ -413,7 +417,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        FilterDefinition filter = FilterManager.getInstance().getFilter(args[2].toUpperCase());
+        FilterDefinition filter = filterManager.getFilter(args[2].toUpperCase());
         if (filter != null && filter.enabled) {
             playerManager.setPlayerFilter(targetPlayer.getUniqueId(), filter);
             playerManager.setPlayerEnabled(targetPlayer.getUniqueId(), true);
@@ -529,7 +533,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
     private boolean listFilters(CommandSender sender) {
         sender.sendMessage(Component.text("=== Available Chat Filters ===", NamedTextColor.AQUA));
-        for (FilterDefinition filter : FilterManager.getInstance().getEnabledFilters()) {
+        for (FilterDefinition filter : filterManager.getEnabledFilters()) {
             sender.sendMessage(Component.text(filter.name.toLowerCase(), NamedTextColor.GRAY)
                     .append(Component.text(" - ", NamedTextColor.GRAY))
                     .append(Component.text(filter.getDisplayName()).color(filter.getChatColor()))
@@ -569,7 +573,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
     private boolean reloadFilters(CommandSender sender) {
         try {
-            FilterManager.getInstance().reloadFilters();
+            filterManager.reloadFilters();
             sender.sendMessage(Component.text("Filters reloaded from JSON configuration.", NamedTextColor.GREEN));
             return true;
         } catch (Exception e) {
@@ -579,15 +583,12 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         }
     }
 
-    public static void resetInstance() {
-        instance = null;
-    }
-
     private boolean resetDefaultConfig(CommandSender sender) {
         sender.sendMessage(
                 Component.text("Backing up and regenerating the default configuration...", NamedTextColor.YELLOW));
         try {
-            ChatFilterConfig.resetConfigFileToDefaults(); // Call it statically
+            ChatFilterConfig.resetConfigFileToDefaults(ChatFilterMod.getInstance().getDataFolder().toPath()); // Call it
+                                                                                                              // statically
             sender.sendMessage(Component.text("Configuration reset to defaults successfully.", NamedTextColor.GREEN));
         } catch (RuntimeException e) {
             sender.sendMessage(Component.text("Failed to reset configuration: " + e.getMessage()));
@@ -607,12 +608,11 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         try {
             sender.sendMessage(Component.text("Reloading main configuration...", NamedTextColor.YELLOW));
 
-            // Force reload the config
-            ChatFilterConfig.resetInstance();
-            ChatFilterConfig config = ChatFilterConfig.getInstance();
+            ChatFilterMod plugin = ChatFilterMod.getInstance();
+            ChatFilterConfig newConfig = ChatFilterConfig.loadConfig(plugin.getDataFolder().toPath());
 
             // Validate the reloaded config
-            ValidationResult result = config.validateConfiguration();
+            ValidationResult result = newConfig.validateConfiguration();
             if (result.hasErrors()) {
                 sender.sendMessage(Component.text("Configuration reload failed with errors:", NamedTextColor.RED));
                 for (String error : result.getErrors()) {
@@ -630,14 +630,9 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 sender.sendMessage(Component.text("Configuration reloaded successfully!", NamedTextColor.GREEN));
             }
 
-            // Restart LLM service with new config
-            ChatFilterMod plugin = ChatFilterMod.getInstance();
-            if (plugin.getLLMService() != null) {
-                plugin.getLLMService().shutdown();
-                plugin.reinitializeLLMService();
-                sender.sendMessage(
-                        Component.text("LLM Service restarted with new configuration.", NamedTextColor.GREEN));
-            }
+            // Update the main plugin instance with the new config and re-initialize
+            // services
+            plugin.setChatFilterConfig(newConfig);
 
             return true;
 
@@ -667,7 +662,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     }
 
     private boolean handleInfoCommand(CommandSender sender, String[] args) {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
+        ChatFilterConfig config = this.config;
 
         sender.sendMessage(Component.text("Provider: ", NamedTextColor.AQUA)
                 .append(Component.text(config.llmProvider, NamedTextColor.WHITE)));
@@ -800,7 +795,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         // Run tests asynchronously to avoid blocking the server
         CompletableFuture.runAsync(() -> {
             try {
-                LLMService llmService = new LLMService();
+                LLMService llmService = new LLMService(config, filterManager);
                 int passed = 0;
                 int total = 0;
 
@@ -863,7 +858,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         CompletableFuture.runAsync(() -> {
             try {
                 // Create and run the full test suite
-                RateLimitedLLMTester tester = new RateLimitedLLMTester();
+                RateLimitedLLMTester tester = new RateLimitedLLMTester(config, filterManager);
                 tester.runAllTestsForMinecraft(sender);
             } catch (Exception e) {
                 Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
@@ -874,7 +869,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     }
 
     private void runFilterTest(CommandSender sender, String filterName) {
-        FilterDefinition filter = FilterManager.getInstance().getFilter(filterName.toUpperCase());
+        FilterDefinition filter = filterManager.getFilter(filterName.toUpperCase());
         if (filter == null) {
             sender.sendMessage(Component.text("❌ Filter not found: " + filterName, NamedTextColor.RED));
             return;
@@ -885,7 +880,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
         CompletableFuture.runAsync(() -> {
             try {
-                LLMService llmService = new LLMService();
+                LLMService llmService = new LLMService(config, filterManager);
                 int testsPassed = 0;
                 int testsTotal = 0;
 
@@ -935,11 +930,11 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     private boolean testSingleMessage(CommandSender sender, String player, String message, String filterName,
             java.util.function.Predicate<String> validator) {
         try {
-            FilterDefinition filter = FilterManager.getInstance().getFilter(filterName);
+            FilterDefinition filter = filterManager.getFilter(filterName);
             if (filter == null)
                 return false;
 
-            LLMService llmService = new LLMService();
+            LLMService llmService = new LLMService(config, filterManager);
             CompletableFuture<LLMService.TransformationResult> future = llmService.transformMessageAsync(message,
                     filter, player);
 

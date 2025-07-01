@@ -17,7 +17,7 @@ class ChatFilterConfigTest {
     
     @BeforeEach
     void setUp() {
-        config = new ChatFilterConfig();
+        config = new ChatFilterConfig(tempDir);
     }
     
     @Test

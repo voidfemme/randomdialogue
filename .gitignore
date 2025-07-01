@@ -130,3 +130,11 @@ final_fixes.sh
 fix_color_deprecation.sh
 fix_color_deprecation_phase2.sh
 fix_component_concat.sh
+
+# Miscellaneous
+ROADMAP.md
+
+# LINES BELOW THIS WERE ADDED VIA `echo "filename.ext" >> .gitignore`
+gradlew
+gradlew.bat
+gradle/wrapper/gradle-wrapper.jar

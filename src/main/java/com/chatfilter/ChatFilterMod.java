@@ -26,6 +26,7 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
     private PlayerFilterManager playerManager;
     private LLMService llmService;
     private ChatFilterConfig config;
+    private FilterManager filterManager;
 
     private Object discordService;
     private Method sendChatMessageMethod;
@@ -39,7 +40,7 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
         logger.info("Initializing Random Dialogue Plugin");
         
         // Load configuration
-        config = ChatFilterConfig.getInstance();
+        config = ChatFilterConfig.loadConfig(getDataFolder().toPath());
 
         // Check for critical configuration issues
         if (!config.validateAndLog()) {
@@ -52,18 +53,18 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
         config.logConfigStatus();
         
         // Initialize filter manager
-        FilterManager.getInstance();
+        filterManager = new FilterManager(getDataFolder().toPath());
         
         // Initialize services
-        llmService = new LLMService();
-        playerManager = new PlayerFilterManager();
+        llmService = new LLMService(config, filterManager);
+        playerManager = new PlayerFilterManager(config, filterManager);
         
         // Register event handlers
         getServer().getPluginManager().registerEvents(this, this);
-        ChatEventHandler.register(playerManager, llmService, this);
+        ChatEventHandler.register(playerManager, llmService, this, config);
         
         // Register commands
-        getCommand("chatfilter").setExecutor(new ChatFilterCommands(playerManager, llmService));
+        getCommand("chatfilter").setExecutor(new ChatFilterCommands(playerManager, llmService, filterManager, config));
         
         logger.info("Random Dialogue Plugin initialized successfully");
 
@@ -159,25 +160,24 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
         return llmService;
     }
 
-    public void reinitializeLLMService() {
-        try {
-            if (this.llmService != null) {
-                logger.info("Shutting down existing LLM service...");
-                this.llmService.shutdown();
-            }
-
-            logger.info("Creating new LLM service with updated configuration...");
-            this.llmService = new LLMService();
-            logger.info("LLM Service reinitialized successfully");
-        } catch (Exception e) {
-            logger.severe("Failed to reinitialize LLM Service: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("LLM Service reinitialization failed", e);
-        }
-    }
     
+    
+    public void setChatFilterConfig(ChatFilterConfig newConfig) {
+        this.config = newConfig;
+        // Re-initialize services with the new config
+        this.llmService = new LLMService(this.config, this.filterManager);
+        this.playerManager = new PlayerFilterManager(this.config, this.filterManager);
+        // Re-register event handlers and commands with the new config
+        ChatEventHandler.register(this.playerManager, this.llmService, this, this.config);
+        getCommand("chatfilter").setExecutor(new ChatFilterCommands(this.playerManager, this.llmService, this.filterManager, this.config));
+    }
+
     public ChatFilterConfig getChatConfig() {
         return config;
+    }
+
+    public FilterManager getFilterManager() {
+        return filterManager;
     }
     
     public void shutdown() {

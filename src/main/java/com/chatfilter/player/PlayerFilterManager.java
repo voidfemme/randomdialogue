@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 
 import com.chatfilter.config.ChatFilterConfig;
 import com.chatfilter.config.FilterMode;
-import com.chatfilter.filter.ChatFilter;
+
 import com.chatfilter.filter.FilterDefinition;
 import com.chatfilter.filter.FilterManager;
 
@@ -30,8 +30,12 @@ public class PlayerFilterManager {
     private final Map<UUID, FilterDefinition> sessionFilters = new ConcurrentHashMap<>();
     private final Set<UUID> manuallySetPlayers = new HashSet<>();
     
-    public PlayerFilterManager() {
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
+    private final ChatFilterConfig config;
+    private final FilterManager filterManager;
+
+    public PlayerFilterManager(ChatFilterConfig config, FilterManager filterManager) {
+        this.config = config;
+        this.filterManager = filterManager;
         try {
             this.currentMode = FilterMode.valueOf(config.defaultFilterMode);
         } catch (IllegalArgumentException e) {
@@ -136,7 +140,7 @@ public class PlayerFilterManager {
             return getRandomFilter();
         }
         
-        return playerFilters.getOrDefault(playerId, FilterManager.getInstance().getFilter("OPPOSITE"));
+        return playerFilters.getOrDefault(playerId, filterManager.getFilter("OPPOSITE"));
     }
     
     public boolean isPlayerEnabled(UUID playerId) {
@@ -150,7 +154,7 @@ public class PlayerFilterManager {
     }
     
     public void setPlayerFilter(UUID playerId, String filterName) {
-        FilterDefinition filter = FilterManager.getInstance().getFilter(filterName);
+        FilterDefinition filter = filterManager.getFilter(filterName);
         if (filter != null) {
             setPlayerFilter(playerId, filter);
         }
@@ -160,7 +164,7 @@ public class PlayerFilterManager {
         if (currentMode == FilterMode.MANUAL) {
             playersEnabled.put(playerId, enabled);
             if (enabled && !playerFilters.containsKey(playerId)) {
-                playerFilters.put(playerId, FilterManager.getInstance().getFilter("OPPOSITE"));
+                playerFilters.put(playerId, filterManager.getFilter("OPPOSITE"));
             }
         }
     }
@@ -214,7 +218,6 @@ public class PlayerFilterManager {
         }
         
         // Update config
-        ChatFilterConfig config = ChatFilterConfig.getInstance();
         config.defaultFilterMode = mode.name();
         config.saveConfig();
     }
@@ -231,9 +234,9 @@ public class PlayerFilterManager {
     }
     
     private FilterDefinition getRandomFilter() {
-        FilterDefinition[] filters = FilterManager.getInstance().getEnabledFilters().toArray(new FilterDefinition[0]);
+        FilterDefinition[] filters = filterManager.getEnabledFilters().toArray(new FilterDefinition[0]);
         if (filters.length == 0) {
-            return FilterManager.getInstance().getFilter("OPPOSITE"); // fallback
+            return filterManager.getFilter("OPPOSITE"); // fallback
         }
         return filters[RANDOM.nextInt(filters.length)];
     }

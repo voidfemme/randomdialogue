@@ -22,16 +22,19 @@ repositories {
     }
 }
 
-
 dependencies {
     compileOnly "io.papermc.paper:paper-api:${project.minecraft_version}-R0.1-SNAPSHOT"
-
+    
     // HTTP client and JSON
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.3'
     implementation 'org.apache.httpcomponents.core5:httpcore5:5.2.5'
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    
+    // Test dependencies - use BOM for version management
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'org.mockito:mockito-core:5.6.0'
     testImplementation "io.papermc.paper:paper-api:${project.minecraft_version}-R0.1-SNAPSHOT"
 }
@@ -39,13 +42,13 @@ dependencies {
 processResources {
     inputs.property "version", project.version
     filteringCharset "UTF-8"
-
     filesMatching("plugin.yml") {
         expand "version": project.version
     }
 }
 
 def targetJavaVersion = 21
+
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
@@ -61,16 +64,19 @@ java {
     withSourcesJar()
 }
 
-
 test {
     useJUnitPlatform()
-    // Temporarily disable tests until we can properly mock the plugin environment
-    enabled = false
+    enabled = true
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+        exceptionFormat = "full"
+    }
 }
 
 jar {
     from("LICENSE") {
-        rename { "${it}_${base.archivesName}"}
+        rename { "${it}_${base.archivesName.get()}"}
     }
     
     // Include dependencies in the JAR
@@ -94,8 +100,8 @@ publishing {
             from components.java
         }
     }
-
     repositories {
+        // Add your publishing repositories here if needed
     }
 }
 
