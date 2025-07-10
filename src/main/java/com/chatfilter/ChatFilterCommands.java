@@ -749,6 +749,9 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 .append(Component.text(" - Show all player filters", NamedTextColor.WHITE)));
         sender.sendMessage(Component.text("/chatfilter llm_info", NamedTextColor.YELLOW)
                 .append(Component.text(" - Show AI model information", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("/chatfilter privacy <allow|deny>", NamedTextColor.WHITE).append(
+                Component.text(" - Allow or deny permission to include your messages in chat history sent to LLM",
+                        NamedTextColor.YELLOW)));
 
         // Quote system instructions
         sender.sendMessage(Component.text("--- Quote System ---", NamedTextColor.GREEN));
