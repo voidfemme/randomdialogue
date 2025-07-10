@@ -28,6 +28,8 @@ import com.chatfilter.player.PlayerFilterManager;
 import com.chatfilter.service.LLMService;
 import com.chatfilter.test.RateLimitedLLMTester;
 
+// This is just a test comment to see if it makes it to the LLM in my summarizer script
+
 public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     private static final Logger LOGGER = Logger.getLogger(ChatFilterCommands.class.getName());
 
@@ -148,6 +150,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                             Component.text("Use: /chatfilter restore_default_config confirm", NamedTextColor.YELLOW));
                     return true;
                 }
+            case "privacy":
+                return handlePrivacyCommand(sender, args);
             default:
                 return showHelp(sender);
         }
@@ -165,7 +169,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
     private List<String> getSubcommandCompletions(CommandSender sender, String partial) {
         List<String> commands = new ArrayList<>(List.of(
-                "enable", "disable", "set", "reroll", "status", "list", "who", "players", "llm_info"));
+                "enable", "disable", "set", "reroll", "status", "list", "who", "players", "llm_info", "privacy"));
 
         if (sender.hasPermission("randomdialogue.admin")) {
             commands.addAll(List.of(
@@ -181,6 +185,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             case "enable", "disable", "reroll", "status" -> getPlayerNames(sender, partial);
             case "set" -> getCombinedFilterAndPlayerNames(sender, partial);
             case "test" -> filterStartsWith(List.of("quick", "full", "filter"), partial);
+            case "privacy" -> filterStartsWith(List.of("allow", "deny"), partial);
             default -> List.of();
         };
     }
@@ -435,6 +440,35 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                     .append(Component.text("/chatfilter list", NamedTextColor.AQUA))
                     .append(Component.text(" to see available filters.", NamedTextColor.RED)));
             return true;
+        }
+    }
+
+    private boolean handlePrivacyCommand(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can set privacy settings.", NamedTextColor.RED));
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Usage: /chatfilter privacy <allow|deny>", NamedTextColor.RED));
+            return true;
+        }
+
+        switch (args[1].toLowerCase()) {
+            case "allow":
+                playerManager.setLLMAllowed(player.getUniqueId(), true);
+                sender.sendMessage(Component.text("You have allowed your messages to be processed by the LLM.",
+                        NamedTextColor.GREEN));
+                return true;
+            case "deny":
+                playerManager.setLLMAllowed(player.getUniqueId(), false);
+                sender.sendMessage(Component.text("You have denied your messages from being processed by the LLM.",
+                        NamedTextColor.YELLOW));
+                llmService.clearConversationHistory(player.getName());
+                return true;
+            default:
+                sender.sendMessage(Component.text("Usage: /chatfilter privacy <allow|deny>", NamedTextColor.RED));
+                return true;
         }
     }
 

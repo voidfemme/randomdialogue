@@ -6,22 +6,16 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 
-import com.chatfilter.ChatFilterMod;
-
 public class ChatFilterConfig {
     private static final Logger LOGGER = Logger.getLogger(ChatFilterConfig.class.getName());
     private static final String CONFIG_FILE = "chat-filter.json";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-
-    
 
     // LLM Provider Settings
     @SerializedName("llm_provider")
@@ -124,8 +118,6 @@ public class ChatFilterConfig {
     public ChatFilterConfig(Path configDirectory) {
         this.configDirectory = configDirectory;
     }
-
-    
 
     public static ChatFilterConfig loadConfig(Path configDirectory) {
         Path configFile = configDirectory.resolve(CONFIG_FILE);
@@ -358,8 +350,6 @@ public class ChatFilterConfig {
         };
     }
 
-    
-
     private void loadEnvironmentVariables() {
         // Load API keys from environment if not set in config
         if (openaiApiKey == null || openaiApiKey.trim().isEmpty()) {
@@ -390,8 +380,6 @@ public class ChatFilterConfig {
     public String getSystemPrompt() {
         return systemPrompt;
     }
-
-    
 
     public void logConfigStatus() {
         LOGGER.info("=== Configuration Status ===");

@@ -353,6 +353,11 @@ public class LLMService {
         }
     }
 
+    public void clearConversationHistory(String playerName) {
+        conversationHistory.remove(playerName);
+        writeToDebugLog("Conversation history for player: " + playerName);
+    }
+
     private String buildContextPrompt(String playerName, String currentMessage, FilterDefinition filter) {
         LinkedList<ChatMessage> history = conversationHistory.get(playerName);
         StringBuilder contextBuilder = new StringBuilder();
@@ -452,10 +457,6 @@ public class LLMService {
             }
 
             try {
-
-                // Add original message to history
-                addMessageToHistory(playerName, originalMessage, false);
-
                 // CHECK CACHE FIRST
                 String cacheKey = getCacheKey(originalMessage, filter, playerName);
                 CachedResponse cached = cache.get(cacheKey);
