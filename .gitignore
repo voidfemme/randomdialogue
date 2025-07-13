@@ -140,3 +140,4 @@ gradlew.bat
 gradle/wrapper/gradle-wrapper.jar
 work_session_*.md
 cleanup.sh
+RELEASE_NOTES.md
