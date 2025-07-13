@@ -1,4 +1,4 @@
-package com.chatfilter.config;
+package com.randomdialogue.config;
 
 public enum FilterMode {
     DISABLED("Filtering is completely disabled"),

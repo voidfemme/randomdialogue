@@ -1,4 +1,4 @@
-package com.chatfilter.service;
+package com.randomdialogue.service;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -24,9 +24,9 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
 
-import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.filter.FilterDefinition;
-import com.chatfilter.filter.FilterManager;
+import com.randomdialogue.config.RandomDialogueConfig;
+import com.randomdialogue.filter.FilterDefinition;
+import com.randomdialogue.filter.FilterManager;
 
 public class LLMService {
     private static final Logger LOGGER = Logger.getLogger(LLMService.class.getName());
@@ -36,7 +36,7 @@ public class LLMService {
     private final ExecutorService executor;
     private final Map<String, CachedResponse> cache;
     private final Map<String, RateLimiter> rateLimiters;
-    private final ChatFilterConfig config;
+    private final RandomDialogueConfig config;
     private final FilterManager filterManager;
 
     // Store recent messages per player for context
@@ -51,7 +51,7 @@ public class LLMService {
     private static final DateTimeFormatter LOG_TIMESTAMP_FORMAT = DateTimeFormatter
             .ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-    public LLMService(ChatFilterConfig config, FilterManager filterManager) {
+    public LLMService(RandomDialogueConfig config, FilterManager filterManager) {
         this.config = config;
         this.filterManager = filterManager;
         this.httpClient = createHttpClient();
@@ -810,9 +810,9 @@ public class LLMService {
     private static class CachedResponse {
         final String response;
         final long timestamp;
-        private final ChatFilterConfig config;
+        private final RandomDialogueConfig config;
 
-        CachedResponse(String response, long timestamp, ChatFilterConfig config) {
+        CachedResponse(String response, long timestamp, RandomDialogueConfig config) {
             this.response = response;
             this.timestamp = timestamp;
             this.config = config;

@@ -77,8 +77,8 @@ The system automatically includes these rules with every filter:
 ## Testing Your Filters
 
 1. Add your filter to `filters.json`
-2. Use `/chatfilter reload` to load the new filter
-3. Set it with `/chatfilter set YOUR_FILTER_NAME`
+2. Use `/randomdialogue reload` to load the new filter
+3. Set it with `/randomdialogue set YOUR_FILTER_NAME`
 4. Test with various message types:
    - Simple greetings: "hello", "good morning"
    - Thanks: "thanks", "thank you"

@@ -1,4 +1,4 @@
-package com.chatfilter.filter;
+package com.randomdialogue.filter;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -13,7 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
-import com.chatfilter.ChatFilterMod;
+import com.randomdialogue.RandomDialogueMod;
 
 public class FilterManager {
     private static final Logger LOGGER = Logger.getLogger(FilterManager.class.getName());

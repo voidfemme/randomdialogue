@@ -1,4 +1,4 @@
-package com.chatfilter.filter;
+package com.randomdialogue.filter;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

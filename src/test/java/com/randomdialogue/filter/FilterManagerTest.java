@@ -1,4 +1,4 @@
-package com.chatfilter.filter;
+package com.randomdialogue.filter;
 
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.BeforeEach;

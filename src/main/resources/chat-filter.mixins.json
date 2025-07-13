@@ -1,12 +1,11 @@
 {
-    "required": true,
-    "minVersion": "0.8",
-    "package": "com.chatfilter.mixin",
-    "compatibilityLevel": "JAVA_21",
-    "refmap": "chat-filter.refmap.json",
-    "mixins": [
-    ],
-    "injectors": {
-        "defaultRequire": 1
-    }
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.randomdialogue.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"refmap": "randomdialogue.refmap.json",
+	"mixins": [],
+	"injectors": {
+		"defaultRequire": 1
+	}
 }

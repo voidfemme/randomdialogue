@@ -1,4 +1,4 @@
-package com.chatfilter;
+package com.randomdialogue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,28 +18,28 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.config.FilterMode;
-import com.chatfilter.config.ValidationResult;
-import com.chatfilter.filter.FilterDefinition;
-import com.chatfilter.filter.FilterManager;
-import com.chatfilter.player.PlayerFilterManager.PlayerFilterStats;
-import com.chatfilter.player.PlayerFilterManager;
-import com.chatfilter.service.LLMService;
-import com.chatfilter.test.RateLimitedLLMTester;
+import com.randomdialogue.config.RandomDialogueConfig;
+import com.randomdialogue.config.FilterMode;
+import com.randomdialogue.config.ValidationResult;
+import com.randomdialogue.filter.FilterDefinition;
+import com.randomdialogue.filter.FilterManager;
+import com.randomdialogue.player.PlayerFilterManager.PlayerFilterStats;
+import com.randomdialogue.player.PlayerFilterManager;
+import com.randomdialogue.service.LLMService;
+import com.randomdialogue.test.RateLimitedLLMTester;
 
 // This is just a test comment to see if it makes it to the LLM in my summarizer script
 
-public class ChatFilterCommands implements CommandExecutor, TabCompleter {
-    private static final Logger LOGGER = Logger.getLogger(ChatFilterCommands.class.getName());
+public class RandomDialogueCommands implements CommandExecutor, TabCompleter {
+    private static final Logger LOGGER = Logger.getLogger(RandomDialogueCommands.class.getName());
 
     private final PlayerFilterManager playerManager;
     private final LLMService llmService;
     private final FilterManager filterManager;
-    private final ChatFilterConfig config;
+    private final RandomDialogueConfig config;
 
-    public ChatFilterCommands(PlayerFilterManager playerManager, LLMService llmService, FilterManager filterManager,
-            ChatFilterConfig config) {
+    public RandomDialogueCommands(PlayerFilterManager playerManager, LLMService llmService, FilterManager filterManager,
+            RandomDialogueConfig config) {
         this.playerManager = playerManager;
         this.llmService = llmService;
         this.filterManager = filterManager;
@@ -84,10 +84,10 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 }
             case "set":
                 if (args.length == 2) {
-                    // Player setting their own filter: /chatfilter set <filter>
+                    // Player setting their own filter: /randomdialogue set <filter>
                     return setPlayerOwnFilter(sender, args[1]);
                 } else if (args.length == 3) {
-                    // Admin setting for another: /chatfilter set <player> <filter>
+                    // Admin setting for another: /randomdialogue set <player> <filter>
                     if (!sender.hasPermission("randomdialogue.admin")) {
                         sender.sendMessage(
                                 Component.text("You can only set filters for yourself.", NamedTextColor.RED));
@@ -96,7 +96,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                     return handleSetCommand(sender, args);
                 } else {
                     sender.sendMessage(
-                            Component.text("Usage: /chatfilter set <filter> OR /chatfilter set <player> <filter>",
+                            Component.text(
+                                    "Usage: /randomdialogue set <filter> OR /randomdialogue set <player> <filter>",
                                     NamedTextColor.RED));
                     return true;
                 }
@@ -147,7 +148,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                             Component.text("Are you sure? Resetting the default configuration may reset any API keys!",
                                     NamedTextColor.YELLOW));
                     sender.sendMessage(
-                            Component.text("Use: /chatfilter restore_default_config confirm", NamedTextColor.YELLOW));
+                            Component.text("Use: /randomdialogue restore_default_config confirm",
+                                    NamedTextColor.YELLOW));
                     return true;
                 }
             case "privacy":
@@ -307,7 +309,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
     private boolean enablePlayerFilter(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(Component.text("Usage: /chatfilter enable <player>", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Usage: /randomdialogue enable <player>", NamedTextColor.RED));
             return true;
         }
 
@@ -349,7 +351,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
     private boolean disablePlayerFilter(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(Component.text("Usage: /chatfilter disable <player>", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Usage: /randomdialogue disable <player>", NamedTextColor.RED));
             return true;
         }
 
@@ -393,7 +395,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         FilterDefinition filter = filterManager.getFilter(filterName.toUpperCase());
         if (filter == null || !filter.enabled) {
             sender.sendMessage(Component.text("Invalid filter. Use ", NamedTextColor.RED)
-                    .append(Component.text("/chatfilter list", NamedTextColor.AQUA))
+                    .append(Component.text("/randomdialogue list", NamedTextColor.AQUA))
                     .append(Component.text(" to see available filters.", NamedTextColor.RED)));
             return true;
         }
@@ -411,7 +413,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
     private boolean handleSetCommand(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(Component.text("Usage: /chatfilter set <player> <filter>", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Usage: /randomdialogue set <player> <filter>", NamedTextColor.RED));
             return true;
         }
 
@@ -437,7 +439,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             return true;
         } else {
             sender.sendMessage(Component.text("Invalid filter. Use ", NamedTextColor.RED)
-                    .append(Component.text("/chatfilter list", NamedTextColor.AQUA))
+                    .append(Component.text("/randomdialogue list", NamedTextColor.AQUA))
                     .append(Component.text(" to see available filters.", NamedTextColor.RED)));
             return true;
         }
@@ -450,7 +452,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         }
 
         if (args.length < 2) {
-            sender.sendMessage(Component.text("Usage: /chatfilter privacy <allow|deny>", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Usage: /randomdialogue privacy <allow|deny>", NamedTextColor.RED));
             return true;
         }
 
@@ -467,14 +469,14 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 llmService.clearConversationHistory(player.getName());
                 return true;
             default:
-                sender.sendMessage(Component.text("Usage: /chatfilter privacy <allow|deny>", NamedTextColor.RED));
+                sender.sendMessage(Component.text("Usage: /randomdialogue privacy <allow|deny>", NamedTextColor.RED));
                 return true;
         }
     }
 
     private boolean rerollFilter(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(Component.text("Usage: /chatfilter reroll <player>", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Usage: /randomdialogue reroll <player>", NamedTextColor.RED));
             return true;
         }
 
@@ -621,8 +623,9 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         sender.sendMessage(
                 Component.text("Backing up and regenerating the default configuration...", NamedTextColor.YELLOW));
         try {
-            ChatFilterConfig.resetConfigFileToDefaults(ChatFilterMod.getInstance().getDataFolder().toPath()); // Call it
-                                                                                                              // statically
+            RandomDialogueConfig.resetConfigFileToDefaults();
+            // it
+            // statically
             sender.sendMessage(Component.text("Configuration reset to defaults successfully.", NamedTextColor.GREEN));
         } catch (RuntimeException e) {
             sender.sendMessage(Component.text("Failed to reset configuration: " + e.getMessage()));
@@ -642,8 +645,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         try {
             sender.sendMessage(Component.text("Reloading main configuration...", NamedTextColor.YELLOW));
 
-            ChatFilterMod plugin = ChatFilterMod.getInstance();
-            ChatFilterConfig newConfig = ChatFilterConfig.loadConfig(plugin.getDataFolder().toPath());
+            RandomDialogueMod plugin = RandomDialogueMod.getInstance();
+            RandomDialogueConfig newConfig = RandomDialogueConfig.loadConfig();
 
             // Validate the reloaded config
             ValidationResult result = newConfig.validateConfiguration();
@@ -666,7 +669,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
             // Update the main plugin instance with the new config and re-initialize
             // services
-            plugin.setChatFilterConfig(newConfig);
+            plugin.setRandomDialogueConfig(newConfig);
 
             return true;
 
@@ -696,7 +699,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
     }
 
     private boolean handleInfoCommand(CommandSender sender, String[] args) {
-        ChatFilterConfig config = this.config;
+        RandomDialogueConfig config = this.config;
 
         sender.sendMessage(Component.text("Provider: ", NamedTextColor.AQUA)
                 .append(Component.text(config.llmProvider, NamedTextColor.WHITE)));
@@ -718,7 +721,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 Component.text("Your messages are transformed using AI to add personality.", NamedTextColor.GRAY));
         sender.sendMessage(Component.text("Original messages are not stored permanently.", NamedTextColor.GRAY));
         sender.sendMessage(Component.text("Use ", NamedTextColor.GREEN)
-                .append(Component.text("/chatfilter help", NamedTextColor.AQUA))
+                .append(Component.text("/randomdialogue help", NamedTextColor.AQUA))
                 .append(Component.text(" for more commands.", NamedTextColor.GREEN)));
         return true;
     }
@@ -733,23 +736,23 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         }
 
         // Player commands (everyone can use)
-        sender.sendMessage(Component.text("/chatfilter status [player]", NamedTextColor.YELLOW)
+        sender.sendMessage(Component.text("/randomdialogue status [player]", NamedTextColor.YELLOW)
                 .append(Component.text(" - Show server or player status", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter list", NamedTextColor.YELLOW)
+        sender.sendMessage(Component.text("/randomdialogue list", NamedTextColor.YELLOW)
                 .append(Component.text(" - List available filters", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter set <filter>", NamedTextColor.YELLOW)
+        sender.sendMessage(Component.text("/randomdialogue set <filter>", NamedTextColor.YELLOW)
                 .append(Component.text(" - Set your own filter", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter enable", NamedTextColor.YELLOW)
+        sender.sendMessage(Component.text("/randomdialogue enable", NamedTextColor.YELLOW)
                 .append(Component.text(" - Enable your filter", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter disable", NamedTextColor.YELLOW)
+        sender.sendMessage(Component.text("/randomdialogue disable", NamedTextColor.YELLOW)
                 .append(Component.text(" - Disable your filter", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter reroll", NamedTextColor.YELLOW)
+        sender.sendMessage(Component.text("/randomdialogue reroll", NamedTextColor.YELLOW)
                 .append(Component.text(" - Get a random filter", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter who", NamedTextColor.YELLOW)
+        sender.sendMessage(Component.text("/randomdialogue who", NamedTextColor.YELLOW)
                 .append(Component.text(" - Show all player filters", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter llm_info", NamedTextColor.YELLOW)
+        sender.sendMessage(Component.text("/randomdialogue llm_info", NamedTextColor.YELLOW)
                 .append(Component.text(" - Show AI model information", NamedTextColor.WHITE)));
-        sender.sendMessage(Component.text("/chatfilter privacy <allow|deny>", NamedTextColor.WHITE).append(
+        sender.sendMessage(Component.text("/randomdialogue privacy <allow|deny>", NamedTextColor.WHITE).append(
                 Component.text(" - Allow or deny permission to include your messages in chat history sent to LLM",
                         NamedTextColor.YELLOW)));
 
@@ -766,21 +769,21 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
         // Admin-only commands
         if (isAdmin) {
             sender.sendMessage(Component.text("--- Admin Commands ---", NamedTextColor.RED));
-            sender.sendMessage(Component.text("/chatfilter mode <mode>", NamedTextColor.YELLOW)
+            sender.sendMessage(Component.text("/randomdialogue mode <mode>", NamedTextColor.YELLOW)
                     .append(Component.text(" - Change server mode", NamedTextColor.WHITE)));
-            sender.sendMessage(Component.text("/chatfilter set <player> <filter>", NamedTextColor.YELLOW)
+            sender.sendMessage(Component.text("/randomdialogue set <player> <filter>", NamedTextColor.YELLOW)
                     .append(Component.text(" - Set filter for another player", NamedTextColor.WHITE)));
-            sender.sendMessage(Component.text("/chatfilter enable <player>", NamedTextColor.YELLOW)
+            sender.sendMessage(Component.text("/randomdialogue enable <player>", NamedTextColor.YELLOW)
                     .append(Component.text(" - Enable filter for another player", NamedTextColor.WHITE)));
-            sender.sendMessage(Component.text("/chatfilter reload", NamedTextColor.YELLOW)
+            sender.sendMessage(Component.text("/randomdialogue reload", NamedTextColor.YELLOW)
                     .append(Component.text(" - Reload filter configurations", NamedTextColor.WHITE)));
-            sender.sendMessage(Component.text("/chatfilter reload_config", NamedTextColor.YELLOW)
+            sender.sendMessage(Component.text("/randomdialogue reload_config", NamedTextColor.YELLOW)
                     .append(Component.text(" - Reload configuration file", NamedTextColor.WHITE)));
-            sender.sendMessage(Component.text("/chatfilter reload_all", NamedTextColor.YELLOW)
+            sender.sendMessage(Component.text("/randomdialogue reload_all", NamedTextColor.YELLOW)
                     .append(Component.text(
-                            " - Reload both filter configuration (filters.json) and main configuration file (chat-filter.json)",
+                            " - Reload both filter configuration (filters.json) and main configuration file (randomdialogue.json)",
                             NamedTextColor.WHITE)));
-            sender.sendMessage(Component.text("/chatfilter restore_default_config confirm", NamedTextColor.YELLOW)
+            sender.sendMessage(Component.text("/randomdialogue restore_default_config confirm", NamedTextColor.YELLOW)
                     .append(Component.text(
                             " - Reset configuration file to defaults. You must type 'confirm' for the operation to be successful.",
                             NamedTextColor.WHITE)));
@@ -797,7 +800,8 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
         if (args.length < 2) {
             sender.sendMessage(
-                    Component.text("Usage: /chatfilter test <quick|full|filter> [filter_name]", NamedTextColor.RED));
+                    Component.text("Usage: /randomdialogue test <quick|full|filter> [filter_name]",
+                            NamedTextColor.RED));
             return true;
         }
 
@@ -813,7 +817,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
             case "filter":
                 if (args.length < 3) {
                     sender.sendMessage(
-                            Component.text("Usage: /chatfilter test filter <filter_name>", NamedTextColor.RED));
+                            Component.text("Usage: /randomdialogue test filter <filter_name>", NamedTextColor.RED));
                     return true;
                 }
                 runFilterTest(sender, args[2]);
@@ -868,7 +872,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 final int finalTotal = total;
 
                 // Send results back to player
-                Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                     sender.sendMessage(
                             Component.text("✅ Quick Test Results: " + finalPassed + "/" + finalTotal + " passed",
                                     finalPassed == finalTotal ? NamedTextColor.GREEN : NamedTextColor.YELLOW));
@@ -881,7 +885,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
                 llmService.shutdown();
             } catch (Exception e) {
-                Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                     sender.sendMessage(Component.text("❌ Test failed: " + e.getMessage(), NamedTextColor.RED));
                 });
             }
@@ -898,7 +902,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 RateLimitedLLMTester tester = new RateLimitedLLMTester(config, filterManager);
                 tester.runAllTestsForMinecraft(sender);
             } catch (Exception e) {
-                Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                     sender.sendMessage(Component.text("❌ Full test failed: " + e.getMessage(), NamedTextColor.RED));
                 });
             }
@@ -949,7 +953,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
                 final int finalTotal = testsTotal;
 
                 // Send results back to player
-                Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                     sender.sendMessage(
                             Component.text("✅ Filter Test Results: " + finalPassed + "/" + finalTotal + " passed",
                                     finalPassed == finalTotal ? NamedTextColor.GREEN : NamedTextColor.YELLOW));
@@ -957,7 +961,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
                 llmService.shutdown();
             } catch (Exception e) {
-                Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                     sender.sendMessage(Component.text("❌ Filter test failed: " + e.getMessage(), NamedTextColor.RED));
                 });
             }
@@ -980,12 +984,12 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
             // Log result to console for debugging
             if (!passed) {
-                Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                     sender.sendMessage(Component.text("❌ FAIL [" + filterName + "]: \"" + message + "\" → \"" +
                             result.transformedMessage + "\"", NamedTextColor.RED));
                 });
             } else {
-                Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                     sender.sendMessage(
                             Component.text("✅ PASS [" + filterName + "]: \"" + message + "\"", NamedTextColor.GREEN));
                 });
@@ -993,7 +997,7 @@ public class ChatFilterCommands implements CommandExecutor, TabCompleter {
 
             return passed;
         } catch (Exception e) {
-            Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+            Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                 sender.sendMessage(
                         Component.text("❌ ERROR testing \"" + message + "\": " + e.getMessage(), NamedTextColor.RED));
             });

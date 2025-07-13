@@ -1,4 +1,4 @@
-package com.chatfilter;
+package com.randomdialogue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -13,59 +13,60 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.filter.FilterManager;
-import com.chatfilter.player.PlayerFilterManager;
-import com.chatfilter.service.LLMService;
+import com.randomdialogue.config.RandomDialogueConfig;
+import com.randomdialogue.filter.FilterManager;
+import com.randomdialogue.player.PlayerFilterManager;
+import com.randomdialogue.service.LLMService;
 
-public class ChatFilterMod extends JavaPlugin implements Listener {
-    public static final String MOD_ID = "chat-filter";
+public class RandomDialogueMod extends JavaPlugin implements Listener {
+    public static final String MOD_ID = "randomdialogue";
     private Logger logger;
-    
-    private static ChatFilterMod instance;
+
+    private static RandomDialogueMod instance;
     private PlayerFilterManager playerManager;
     private LLMService llmService;
-    private ChatFilterConfig config;
+    private RandomDialogueConfig config;
     private FilterManager filterManager;
 
     private Object discordService;
     private Method sendChatMessageMethod;
     private boolean discordIntegrationEnabled = false;
-    
+
     @Override
     public void onEnable() {
         instance = this;
         logger = getLogger();
-        
+
         logger.info("Initializing Random Dialogue Plugin");
-        
+
         // Load configuration
-        config = ChatFilterConfig.loadConfig(getDataFolder().toPath());
+        config = RandomDialogueConfig.loadConfig();
 
         // Check for critical configuration issues
         if (!config.validateAndLog()) {
             logger.severe("Critical configuration errors detected. Plugin cannot start safely.");
-            logger.severe("Please check your config/chat-filter.json file and fix the errors above.");
+            logger.severe("Please check your config/randomdialogue.json file and fix the errors above.");
             setEnabled(false);
             return;
         }
 
         config.logConfigStatus();
-        
+
         // Initialize filter manager
         filterManager = new FilterManager(getDataFolder().toPath());
-        
+
         // Initialize services
         llmService = new LLMService(config, filterManager);
         playerManager = new PlayerFilterManager(config, filterManager);
-        
+
         // Register event handlers
         getServer().getPluginManager().registerEvents(this, this);
         ChatEventHandler.register(playerManager, llmService, this, config);
-        
+
         // Register commands
-        getCommand("chatfilter").setExecutor(new ChatFilterCommands(playerManager, llmService, filterManager, config));
-        
+        getCommand("randomdialogue")
+                .setExecutor(new RandomDialogueCommands(playerManager, llmService, filterManager, config));
+
         logger.info("Random Dialogue Plugin initialized successfully");
 
         // Handle EssentialsDiscord compatibility
@@ -119,17 +120,17 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
             }
         }
     }
-    
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         playerManager.onPlayerJoin(event.getPlayer());
     }
-    
+
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         playerManager.onPlayerLeave(event.getPlayer());
     }
-    
+
     private void validateConfiguration() {
         if (!config.hasValidApiKey()) {
             logger.warning("=================================================");
@@ -142,51 +143,50 @@ public class ChatFilterMod extends JavaPlugin implements Listener {
             logger.info("Configuration validated successfully for provider: " + config.llmProvider);
         }
     }
-    
+
     @Override
     public void onDisable() {
         shutdown();
     }
-    
-    public static ChatFilterMod getInstance() {
+
+    public static RandomDialogueMod getInstance() {
         return instance;
     }
-    
+
     public PlayerFilterManager getPlayerManager() {
         return playerManager;
     }
-    
+
     public LLMService getllmService() {
         return llmService;
     }
 
-    
-    
-    public void setChatFilterConfig(ChatFilterConfig newConfig) {
+    public void setRandomDialogueConfig(RandomDialogueConfig newConfig) {
         this.config = newConfig;
         // Re-initialize services with the new config
         this.llmService = new LLMService(this.config, this.filterManager);
         this.playerManager = new PlayerFilterManager(this.config, this.filterManager);
         // Re-register event handlers and commands with the new config
         ChatEventHandler.register(this.playerManager, this.llmService, this, this.config);
-        getCommand("chatfilter").setExecutor(new ChatFilterCommands(this.playerManager, this.llmService, this.filterManager, this.config));
+        getCommand("randomdialogue").setExecutor(
+                new RandomDialogueCommands(this.playerManager, this.llmService, this.filterManager, this.config));
     }
 
-    public ChatFilterConfig getChatConfig() {
+    public RandomDialogueConfig getChatConfig() {
         return config;
     }
 
     public FilterManager getFilterManager() {
         return filterManager;
     }
-    
+
     public void shutdown() {
         logger.info("Shutting down Random Dialogue Plugin");
-        
+
         if (llmService != null) {
             llmService.shutdown();
         }
-        
+
         logger.info("Random Dialogue Plugin shutdown complete");
     }
 

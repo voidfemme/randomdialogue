@@ -1,6 +1,6 @@
 # Logging Configuration Options
 
-The ChatFilter mod now has two separate logging configuration options:
+The RandomDialogue mod now has two separate logging configuration options:
 
 ## `enable_debug_logging` (default: false)
 - **Purpose**: General debug logging for the mod

@@ -1,4 +1,4 @@
-package com.chatfilter.util;
+package com.randomdialogue.util;
 
 import java.util.HashMap;
 import java.util.Map;

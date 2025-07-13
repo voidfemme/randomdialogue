@@ -1,4 +1,4 @@
-package com.chatfilter.player;
+package com.randomdialogue.player;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -10,11 +10,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 
-import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.config.FilterMode;
+import com.randomdialogue.config.RandomDialogueConfig;
+import com.randomdialogue.config.FilterMode;
 
-import com.chatfilter.filter.FilterDefinition;
-import com.chatfilter.filter.FilterManager;
+import com.randomdialogue.filter.FilterDefinition;
+import com.randomdialogue.filter.FilterManager;
 
 public class PlayerFilterManager {
     private static final Logger LOGGER = Logger.getLogger(PlayerFilterManager.class.getName());
@@ -30,12 +30,12 @@ public class PlayerFilterManager {
     private final Map<UUID, FilterDefinition> sessionFilters = new ConcurrentHashMap<>();
     private final Set<UUID> manuallySetPlayers = new HashSet<>();
 
-    private final ChatFilterConfig config;
+    private final RandomDialogueConfig config;
     private final FilterManager filterManager;
 
     private final Map<UUID, Boolean> allowLLMProcessing = new ConcurrentHashMap<>();
 
-    public PlayerFilterManager(ChatFilterConfig config, FilterManager filterManager) {
+    public PlayerFilterManager(RandomDialogueConfig config, FilterManager filterManager) {
         this.config = config;
         this.filterManager = filterManager;
         try {

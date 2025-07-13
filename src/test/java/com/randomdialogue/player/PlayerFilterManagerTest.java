@@ -1,4 +1,4 @@
-package com.chatfilter.player;
+package com.randomdialogue.player;
 
 import java.nio.file.Path;
 
@@ -11,30 +11,30 @@ import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.api.io.TempDir;
 
-import com.chatfilter.config.ChatFilterConfig;
-import com.chatfilter.filter.FilterDefinition;
-import com.chatfilter.filter.FilterManager;
+import com.randomdialogue.config.RandomDialogueConfig;
+import com.randomdialogue.filter.FilterDefinition;
+import com.randomdialogue.filter.FilterManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PlayerFilterManagerTest {
-    
+
     @TempDir
     Path tempDir;
 
     private PlayerFilterManager manager;
     private FilterManager filterManager;
-    private ChatFilterConfig config;
+    private RandomDialogueConfig config;
     private UUID testPlayerId;
-    
+
     @BeforeEach
     void setUp() {
-        config = ChatFilterConfig.loadConfig(tempDir);
+        config = RandomDialogueConfig.loadConfig();
         filterManager = new FilterManager(tempDir);
         manager = new PlayerFilterManager(config, filterManager);
         testPlayerId = UUID.randomUUID();
     }
-    
+
     @Test
     void testSetAndGetPlayerFilter() {
         FilterDefinition pirateFilter = filterManager.getFilter("PIRATE");
@@ -46,19 +46,19 @@ public class PlayerFilterManagerTest {
             assertTrue(true, "PIRATE filter not configured - skipping test");
         }
     }
-    
+
     @Test
     void testRandomFilterAssignment() {
         // Test that we can get random filters through the manager
         FilterDefinition filter1 = getRandomFilterFromManager();
         FilterDefinition filter2 = getRandomFilterFromManager();
-        
+
         assertNotNull(filter1, "Should be able to get a random filter");
         assertNotNull(filter2, "Should be able to get a random filter");
         assertTrue(filter1.enabled, "Random filter should be enabled");
         assertTrue(filter2.enabled, "Random filter should be enabled");
     }
-    
+
     private FilterDefinition getRandomFilterFromManager() {
         // Get a random filter from the available enabled filters
         ArrayList<FilterDefinition> enabledFilters = new ArrayList<>(filterManager.getEnabledFilters());
@@ -67,13 +67,13 @@ public class PlayerFilterManagerTest {
         }
         return enabledFilters.get(0); // Just return the first one for testing
     }
-    
+
     @Test
     void testPlayerFilterStats() {
         FilterDefinition robotFilter = filterManager.getFilter("ROBOT");
         if (robotFilter != null) {
             manager.setPlayerFilter(testPlayerId, robotFilter);
-            
+
             var stats = manager.getPlayerStats(testPlayerId);
             assertNotNull(stats);
             assertEquals(robotFilter, stats.currentFilter);
@@ -88,7 +88,7 @@ public class PlayerFilterManagerTest {
             }
         }
     }
-    
+
     @Test
     void testFilterPersistence() {
         FilterDefinition grandmaFilter = filterManager.getFilter("GRANDMA");
@@ -104,40 +104,40 @@ public class PlayerFilterManagerTest {
             }
         }
     }
-    
+
     @Test
     void testMultiplePlayersFilters() {
         UUID player1 = UUID.randomUUID();
         UUID player2 = UUID.randomUUID();
-        
+
         FilterDefinition filter1 = getRandomFilterFromManager();
         FilterDefinition filter2 = getRandomFilterFromManager();
-        
+
         if (filter1 != null && filter2 != null) {
             manager.setPlayerFilter(player1, filter1);
             manager.setPlayerFilter(player2, filter2);
-            
+
             Map<UUID, FilterDefinition> filters = manager.getCurrentPlayerFilters();
             assertEquals(filter1, filters.get(player1));
             assertEquals(filter2, filters.get(player2));
         }
     }
-    
+
     @Test
     void testFilterManagerHasFilters() {
         assertNotNull(filterManager.getAllFilters());
         assertFalse(filterManager.getAllFilters().isEmpty(), "FilterManager should have at least some filters");
     }
-    
+
     @Test
     void testPlayerEnabled() {
         manager.setPlayerEnabled(testPlayerId, true);
         assertTrue(manager.isPlayerEnabled(testPlayerId));
-        
+
         manager.setPlayerEnabled(testPlayerId, false);
         assertFalse(manager.isPlayerEnabled(testPlayerId));
     }
-    
+
     @Test
     void testPlayerStats() {
         var stats = manager.getPlayerStats(testPlayerId);

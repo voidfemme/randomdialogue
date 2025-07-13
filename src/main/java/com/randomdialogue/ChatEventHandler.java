@@ -1,4 +1,4 @@
-package com.chatfilter;
+package com.randomdialogue;
 
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -15,30 +15,30 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
-import com.chatfilter.config.ChatFilterConfig;
+import com.randomdialogue.config.RandomDialogueConfig;
 
-import com.chatfilter.filter.FilterDefinition;
-import com.chatfilter.player.PlayerFilterManager;
-import com.chatfilter.service.LLMService;
+import com.randomdialogue.filter.FilterDefinition;
+import com.randomdialogue.player.PlayerFilterManager;
+import com.randomdialogue.service.LLMService;
 
 public class ChatEventHandler implements Listener {
     private static final Logger LOGGER = Logger.getLogger(ChatEventHandler.class.getName());
 
     private final PlayerFilterManager playerManager;
     private final LLMService llmService;
-    private final ChatFilterMod plugin;
-    private final ChatFilterConfig config;
+    private final RandomDialogueMod plugin;
+    private final RandomDialogueConfig config;
 
-    private ChatEventHandler(PlayerFilterManager playerManager, LLMService llmService, ChatFilterMod plugin,
-            ChatFilterConfig config) {
+    private ChatEventHandler(PlayerFilterManager playerManager, LLMService llmService, RandomDialogueMod plugin,
+            RandomDialogueConfig config) {
         this.playerManager = playerManager;
         this.llmService = llmService;
         this.plugin = plugin;
         this.config = config;
     }
 
-    public static void register(PlayerFilterManager playerManager, LLMService llmService, ChatFilterMod plugin,
-            ChatFilterConfig config) {
+    public static void register(PlayerFilterManager playerManager, LLMService llmService, RandomDialogueMod plugin,
+            RandomDialogueConfig config) {
         ChatEventHandler handler = new ChatEventHandler(playerManager, llmService, plugin, config);
 
         // Register with Bukkit
@@ -100,7 +100,7 @@ public class ChatEventHandler implements Listener {
                 .thenAccept(result -> {
                     try {
                         // Send the transformed message to all players (sync with main thread)
-                        Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                        Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                             sendTransformedMessage(player, result.transformedMessage, originalMessage);
 
                             // If there's a follow up message for quote preservation, send it too
@@ -113,7 +113,7 @@ public class ChatEventHandler implements Listener {
                         LOGGER.severe("Failed to send transformed message: " + e.getMessage());
                         // Send original message as fallback
                         if (config.enableFallback) {
-                            Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                            Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                                 sendFallbackMessage(player, originalMessage);
                             });
                         }
@@ -131,7 +131,7 @@ public class ChatEventHandler implements Listener {
                             + errorMessage);
 
                     // Send fallback message if enabled (sync with main thread)
-                    Bukkit.getScheduler().runTask(ChatFilterMod.getInstance(), () -> {
+                    Bukkit.getScheduler().runTask(RandomDialogueMod.getInstance(), () -> {
                         if (config.enableFallback) {
                             sendFallbackMessage(player, originalMessage);
                         } else {
@@ -143,15 +143,15 @@ public class ChatEventHandler implements Listener {
     }
 
     private void sendQuoteFollowUpMessage(String followUpMessage) {
-        // Send the quote preservation follow-up message as "chatfilter" user
+        // Send the quote preservation follow-up message as "randomdialogue" user
         // Using gray color to make it less intrusive
-        Bukkit.broadcast(Component.text("<chatfilter> ", NamedTextColor.GRAY)
+        Bukkit.broadcast(Component.text("<randomdialogue> ", NamedTextColor.GRAY)
                 .append(Component.text(followUpMessage, NamedTextColor.WHITE)));
     }
 
     private void sendTransformedMessage(Player player, String transformedMessage, String originalMessage) {
         String playerName = player.getName();
-        ChatFilterMod plugin = ChatFilterMod.getInstance();
+        RandomDialogueMod plugin = RandomDialogueMod.getInstance();
 
         // Send the message as if it came from the player normally (no special
         // formatting)

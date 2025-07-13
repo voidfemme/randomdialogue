@@ -1,4 +1,10 @@
-package com.chatfilter.config;
+package com.randomdialogue.config;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+import java.util.logging.Logger;
+import com.randomdialogue.RandomDialogueMod;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,16 +12,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.logging.Logger;
+import java.util.List;
+import java.util.ArrayList;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
-
-public class ChatFilterConfig {
-    private static final Logger LOGGER = Logger.getLogger(ChatFilterConfig.class.getName());
-    private static final String CONFIG_FILE = "chat-filter.json";
+public class RandomDialogueConfig {
+    private static final Logger LOGGER = Logger.getLogger(RandomDialogueConfig.class.getName());
+    private static final String CONFIG_FILE = "randomdialogue.json";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    private static RandomDialogueConfig instance;
 
     // LLM Provider Settings
     @SerializedName("llm_provider")
@@ -113,30 +118,32 @@ public class ChatFilterConfig {
             - "good morning" → "MORNING DETECTED" (robot style)
             """;
 
-    public transient Path configDirectory;
-
-    public ChatFilterConfig(Path configDirectory) {
-        this.configDirectory = configDirectory;
+    public static RandomDialogueConfig getInstance() {
+        if (instance == null) {
+            instance = loadConfig();
+        }
+        return instance;
     }
 
-    public static ChatFilterConfig loadConfig(Path configDirectory) {
-        Path configFile = configDirectory.resolve(CONFIG_FILE);
+    public static RandomDialogueConfig loadConfig() {
+        Path configDir = getConfigDirectory();
+        Path configFile = configDir.resolve(CONFIG_FILE);
 
-        ChatFilterConfig config;
+        RandomDialogueConfig config;
 
         if (Files.exists(configFile)) {
             try {
                 String json = Files.readString(configFile);
-                config = GSON.fromJson(json, ChatFilterConfig.class);
-                config.configDirectory = configDirectory;
+                config = GSON.fromJson(json, RandomDialogueConfig.class);
+                LOGGER.info("Loaded configuration from " + configFile);
             } catch (Exception e) {
                 LOGGER.severe(
                         "Failed to load configuration from " + configFile + ", using defaults: " + e.getMessage());
-                config = new ChatFilterConfig(configDirectory);
+                config = new RandomDialogueConfig();
             }
         } else {
             LOGGER.info("Configuration file not found, creating default configuration at " + configFile);
-            config = new ChatFilterConfig(configDirectory);
+            config = new RandomDialogueConfig();
         }
 
         // Load environment variables AFTER loading config
@@ -152,11 +159,12 @@ public class ChatFilterConfig {
     }
 
     public void saveConfig() {
-        Path configFile = this.configDirectory.resolve(CONFIG_FILE);
+        Path configDir = getConfigDirectory();
+        Path configFile = configDir.resolve(CONFIG_FILE);
 
         try {
             // Ensure config directory exists
-            Files.createDirectories(this.configDirectory);
+            Files.createDirectories(configDir);
 
             // Validate before saving
             validateAndFix();
@@ -170,29 +178,15 @@ public class ChatFilterConfig {
         }
     }
 
-    public static void resetConfigFileToDefaults(Path configDirectory) {
-        Path configFile = configDirectory.resolve(CONFIG_FILE);
+    public static void resetConfigFileToDefaults() {
+        Path configDir = getConfigDirectory();
+        Path configFile = configDir.resolve(CONFIG_FILE);
 
         try {
             if (Files.exists(configFile)) {
-                Path backupFile = configDirectory.resolve(CONFIG_FILE + ".backup." +
+                Path backupFile = configDir.resolve(CONFIG_FILE + ".backup." +
                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")));
-
-                // Create the backup
                 Files.copy(configFile, backupFile);
-
-                // Verify the backup was created successfully
-                if (!Files.exists(backupFile)) {
-                    throw new IOException("Backup file was not created successfully");
-                }
-
-                // Verify the backup has the same size as the original (basic integrity check)
-                long originalSize = Files.size(configFile);
-                long backupSize = Files.size(backupFile);
-                if (originalSize != backupSize) {
-                    throw new IOException("Backup file size doesn't match original file size");
-                }
-
                 LOGGER.info("Existing configuration backed up to: " + backupFile.getFileName());
 
                 // Delete the current config file
@@ -201,7 +195,7 @@ public class ChatFilterConfig {
             }
 
             // Create a new default configuration instance
-            ChatFilterConfig defaultConfig = new ChatFilterConfig(configDirectory);
+            RandomDialogueConfig defaultConfig = new RandomDialogueConfig();
 
             // Load any environment variables into the default config
             defaultConfig.loadEnvironmentVariables();
@@ -214,6 +208,7 @@ public class ChatFilterConfig {
         } catch (IOException e) {
             LOGGER.severe("Failed to set configuration file to defaults: " + e.getMessage());
             throw new RuntimeException("Could not reset configuration file", e);
+
         }
     }
 
@@ -350,6 +345,16 @@ public class ChatFilterConfig {
         };
     }
 
+    private static Path getConfigDirectory() {
+        RandomDialogueMod mod = RandomDialogueMod.getInstance();
+        if (mod != null) {
+            return mod.getDataFolder().toPath();
+        } else {
+            // running outside of the plugin (e.g. in tests) -> use a temp dir
+            return Path.of(System.getProperty("java.io.tmpdir"), "random-dialogue");
+        }
+    }
+
     private void loadEnvironmentVariables() {
         // Load API keys from environment if not set in config
         if (openaiApiKey == null || openaiApiKey.trim().isEmpty()) {
@@ -379,6 +384,11 @@ public class ChatFilterConfig {
 
     public String getSystemPrompt() {
         return systemPrompt;
+    }
+
+    public static void resetInstance() {
+        instance = null;
+        LOGGER.info("Configuration instance reset - will reload on next access");
     }
 
     public void logConfigStatus() {

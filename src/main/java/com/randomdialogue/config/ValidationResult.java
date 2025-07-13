@@ -1,4 +1,4 @@
-package com.chatfilter.config;
+package com.randomdialogue.config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,4 +31,3 @@ public class ValidationResult {
         return new ArrayList<>(warnings);
     }
 }
-

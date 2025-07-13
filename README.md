@@ -1,6 +1,6 @@
-# Chat Filter Mod
+# RandomDialogue plugin
 
-A Minecraft Fabric server-side mod that transforms chat messages using AI personalities and filters.
+A Minecraft Paper plugin that transforms chat messages using AI personalities and filters.
 
 ## Features
 
@@ -17,7 +17,7 @@ A Minecraft Fabric server-side mod that transforms chat messages using AI person
 
 ## Installation
 
-1. Ensure you have Minecraft 1.21.4 and Fabric Loader installed
+1. Ensure you have Minecraft 1.21.7 and a Paper server installed
 2. Download the mod JAR file
 3. Place it in your server's `mods` folder
 4. Start the server to generate the config file
@@ -26,7 +26,7 @@ A Minecraft Fabric server-side mod that transforms chat messages using AI person
 
 ## Configuration
 
-The mod creates a configuration file at `config/chat-filter.json`. Key settings:
+The mod creates a configuration file at `config/randomdialogue.json`. Key settings:
 
 ```json
 {
@@ -71,42 +71,42 @@ You can create your own personality filters by editing the `filters.json` file i
 
 ### Player Commands
 **Self-Management:**
-- `/chatfilter enable` - Enable chat filtering for yourself
-- `/chatfilter disable` - Disable chat filtering for yourself  
-- `/chatfilter set <filter>` - Choose your personality filter (manual mode only)
-- `/chatfilter reroll` - Get a new random filter (available in random modes)
+- `/randomdialogue enable` - Enable chat filtering for yourself
+- `/randomdialogue disable` - Disable chat filtering for yourself  
+- `/randomdialogue set <filter>` - Choose your personality filter (manual mode only)
+- `/randomdialogue reroll` - Get a new random filter (available in random modes)
 
 **Information:**
-- `/chatfilter status` - Check your current filter status
-- `/chatfilter list` - Browse all available personality filters
-- `/chatfilter llm_info` - View LLM provider and model information
-- `/chatfilter who` - See everyone's current filter assignments
+- `/randomdialogue status` - Check your current filter status
+- `/randomdialogue list` - Browse all available personality filters
+- `/randomdialogue llm_info` - View LLM provider and model information
+- `/randomdialogue who` - See everyone's current filter assignments
 
 **Note:** Players can now manage their own filters (enable/disable/reroll) without admin permissions, while admins retain full control over server-wide settings and can manage any player's settings.
 
 ### Admin Commands
 **Player Management:**
-- `/chatfilter enable <player>` - Enable filtering for a specific player
-- `/chatfilter disable <player>` - Disable filtering for a specific player
-- `/chatfilter set <player> <filter>` - Assign a filter to a specific player
-- `/chatfilter reroll <player>` - Reroll a player's filter
+- `/randomdialogue enable <player>` - Enable filtering for a specific player
+- `/randomdialogue disable <player>` - Disable filtering for a specific player
+- `/randomdialogue set <player> <filter>` - Assign a filter to a specific player
+- `/randomdialogue reroll <player>` - Reroll a player's filter
 
 **Server Management:**
-- `/chatfilter mode <mode>` - Change the server-wide filter mode
-- `/chatfilter status [player]` - View server status or specific player details
-- `/chatfilter reload` - Reload filters and configuration
+- `/randomdialogue mode <mode>` - Change the server-wide filter mode
+- `/randomdialogue status [player]` - View server status or specific player details
+- `/randomdialogue reload` - Reload filters and configuration
 
 **Configuration Management:**
-- `/chatfilter reload_config` - Reload main configuration file
-- `/chatfilter reload_all` - Reload both filter and main configuration files
-- `/chatfilter restore_default_config confirm` - Reset configuration to defaults (requires confirmation)
+- `/randomdialogue reload_config` - Reload main configuration file
+- `/randomdialogue reload_all` - Reload both filter and main configuration files
+- `/randomdialogue restore_default_config confirm` - Reset configuration to defaults (requires confirmation)
 
 **Note:** Players have full control over their own chat experience, while admins can manage server-wide settings and assist individual players.
 
 ### Configuration Validation
 
 The mod now validates configuration on startup and will prevent server start if
-critical errors are found. Use `/chatfilter reload_config` to reload and
+critical errors are found. Use `/randomdialogue reload_config` to reload and
 validate configuration changes without restarting the server.
 
 ### Quote Preservation System
@@ -120,7 +120,7 @@ The mod includes intelligent quote handling:
 Examples:
 - `"This entire message bypasses transformation"` → Sent as-is
 - `I said "hello world" to everyone` → Quotes are preserved during transformation
-- If transformation accidentally changes quotes, you'll see: `<chatfilter> PlayerName: "I said..." → ["hello world"]`
+- If transformation accidentally changes quotes, you'll see: `<randomdialogue> PlayerName: "I said..." → ["hello world"]`
 
 ### Filter Modes
 
@@ -187,10 +187,13 @@ Discord channels.
 
 ### Dependencies
 
-- Minecraft 1.21.4
-- Fabric Loader 0.16.9
-- Fabric API 0.110.0+1.21.4
-- Cloth Config (for configuration UI)
+- Minecraft 1.21.7
+- Paper server (latest build recommended)
+- Java 21 or higher
+- HTTP client libraries (included in JAR):
+    - Apache HttpComponents Client 5.3
+    - Google Gson 2.10.1
+
 
 ## API Costs and Rate Limiting
 
@@ -242,9 +245,9 @@ When debug logging is enabled, you'll see:
 3. **Messages not transforming** - Check server logs for errors, ensure API provider is accessible
 4. **Quotes being modified** - Check debug logs for quote preservation issues, ensure you're using standard quote marks (`"`)
 5. **Unexpected transformations** - Review conversation context in debug logs, consider if recent chat history is affecting results
-6. **"Critical configuration errors detected"** - Check your config file syntax and required fields, fix errors and restart or use `/chatfilter reload_config`
-7. **Configuration reload failed** - Use `/chatfilter reload_config` to test config changes before restarting
-8. **Need to reset configuration** - Use `/chatfilter restore_default_config confirm` - to restore default settings (creates backup first)
+6. **"Critical configuration errors detected"** - Check your config file syntax and required fields, fix errors and restart or use `/randomdialogue reload_config`
+7. **Configuration reload failed** - Use `/randomdialogue reload_config` to test config changes before restarting
+8. **Need to reset configuration** - Use `/randomdialogue restore_default_config confirm` - to restore default settings (creates backup first)
 
 ### Known Issues
 
